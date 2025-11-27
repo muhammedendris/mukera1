@@ -1,0 +1,779 @@
+/* Import Google Fonts - Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ===================================
+   LIGHT MODE - MODERN PROFESSIONAL DESIGN
+   Soft Gray + Rich Dark Text + Professional Teal
+   =================================== */
+:root {
+  /* ===== PRIMARY COLORS - PROFESSIONAL TEAL ===== */
+  --color-primary: #14B8A6;              /* Teal - Main accent */
+  --color-primary-hover: #0D9488;        /* Darker Teal - Hover state */
+  --color-primary-light: #CCFBF1;        /* Light Teal - Backgrounds */
+  --color-primary-text: #ffffff;         /* White - Text on primary buttons */
+
+  /* ===== SECONDARY COLORS ===== */
+  --color-secondary: #6C757D;
+  --color-secondary-hover: #545B62;
+
+  /* ===== STATUS COLORS - SUCCESS ===== */
+  --color-success: #28A745;              /* Green - Main success color */
+  --color-success-hover: #218838;        /* Green - Hover state */
+  --color-success-light: #D4EDDA;        /* Green - Light background */
+  --color-success-text: #155724;         /* Green - Text on light bg */
+  --color-success-border: #C3E6CB;       /* Green - Badge borders */
+
+  /* ===== STATUS COLORS - WARNING ===== */
+  --color-warning: #FFC107;              /* Amber - Main warning color */
+  --color-warning-hover: #E0A800;        /* Amber - Hover state */
+  --color-warning-light: #FFF3CD;        /* Amber - Light background */
+  --color-warning-text: #856404;         /* Amber - Text on light bg */
+  --color-warning-border: #FFEEBA;       /* Amber - Badge borders */
+
+  /* ===== STATUS COLORS - DANGER/ERROR ===== */
+  --color-danger: #DC3545;               /* Red - Main danger color */
+  --color-danger-hover: #C82333;         /* Red - Hover state */
+  --color-danger-light: #F8D7DA;         /* Red - Light background */
+  --color-danger-text: #721C24;          /* Red - Text on light bg */
+  --color-danger-border: #F5C6CB;        /* Red - Badge borders */
+
+  /* ===== STATUS COLORS - INFO ===== */
+  --color-info: #17A2B8;                 /* Cyan - Main info color */
+  --color-info-hover: #138496;           /* Cyan - Hover state */
+  --color-info-light: #D1ECF1;           /* Cyan - Light background */
+  --color-info-text: #0C5460;            /* Cyan - Text on light bg */
+  --color-info-border: #BEE5EB;          /* Cyan - Badge borders */
+
+  /* ===== MAIN BACKGROUND COLOR ===== */
+  --color-background: #F5F7FA;        /* Soft gray-blue - main page background */
+
+  /* ===== SURFACE COLORS (Cards, Modals) ===== */
+  --color-surface: #FFFFFF;           /* Pure white surface for elevation */
+
+  /* ===== CARD-SPECIFIC COLORS ===== */
+  --card-background: #FFFFFF;         /* White card background - elevated from body */
+  --card-border: #E1E8ED;             /* Soft blue-gray border */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);  /* Layered subtle shadow */
+
+  /* ===== TEXT COLORS - OPTIMIZED CONTRAST ===== */
+  --color-text-primary: #1F2937;       /* Rich dark gray - Excellent readability */
+  --color-text-secondary: #374151;     /* Medium dark gray - Body text */
+  --color-text-tertiary: #4B5563;      /* Darker muted gray - Better contrast */
+  --color-text-disabled: #9CA3AF;      /* Light gray - Disabled state */
+  --color-text-inverse: #FFFFFF;       /* White - For colored backgrounds */
+
+  /* ===== BORDER COLORS ===== */
+  --color-border: #E9ECEF;
+  --color-border-strong: #DEE2E6;
+
+  /* ===== INPUT COLORS ===== */
+  --color-input-bg: #FFFFFF;
+  --color-input-border: #E9ECEF;
+  --color-input-border-focus: #14B8A6;
+
+  /* ===== NEUTRAL COLORS ===== */
+  --color-neutral-50: #F8F9FA;
+  --color-neutral-100: #F1F3F5;
+  --color-neutral-200: #E9ECEF;
+  --color-neutral-300: #DEE2E6;
+  --color-neutral-400: #CED4DA;
+  --color-neutral-500: #ADB5BD;
+  --color-neutral-600: #6C757D;
+  --color-neutral-700: #495057;
+  --color-neutral-800: #343A40;
+  --color-neutral-900: #212529;
+
+  /* ===== TABLE-SPECIFIC COLORS ===== */
+  --color-table-header-bg: #F8F9FA;      /* Off-white - Table headers */
+  --color-table-header-text: #1F2937;    /* Rich dark gray - Header text */
+  --color-table-row-hover: #F8F9FA;      /* Off-white - Row hover */
+  --color-table-border: #E9ECEF;         /* Light gray - Table borders */
+  --color-table-text: #374151;           /* Medium dark gray - Table cells */
+
+  /* ===== LEGACY BACKGROUND COLORS (For compatibility) ===== */
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F8F9FA;
+  --color-bg-tertiary: #F1F3F5;
+  --color-surface-elevated: #FFFFFF;
+
+  /* ===== SHADOWS ===== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+}
+
+/* ===================================
+   DARK MODE - ACTIVATED BY html.dark
+   Professional Teal accent maintained
+   =================================== */
+html.dark {
+  /* ===== PRIMARY COLORS - PROFESSIONAL TEAL (Lighter for dark) ===== */
+  --color-primary: #5EEAD4;              /* Lighter Teal for dark bg */
+  --color-primary-hover: #2DD4BF;        /* Medium Teal - Hover state */
+  --color-primary-light: #134E4A;        /* Dark Teal - Backgrounds */
+  --color-primary-text: #0D1117;         /* Dark text - Better contrast on light teal */
+
+  /* ===== SECONDARY COLORS ===== */
+  --color-secondary: #ADB5BD;
+  --color-secondary-hover: #6C757D;
+
+  /* ===== STATUS COLORS - SUCCESS ===== */
+  --color-success: #48BB78;              /* Green - Brighter for dark */
+  --color-success-hover: #38A169;        /* Green - Hover state */
+  --color-success-light: #1C4532;        /* Green - Dark background */
+  --color-success-text: #9AE6B4;         /* Green - Text on dark bg */
+  --color-success-border: #276749;       /* Green - Badge borders */
+
+  /* ===== STATUS COLORS - WARNING ===== */
+  --color-warning: #F6E05E;              /* Amber - Brighter for dark */
+  --color-warning-hover: #ECC94B;        /* Amber - Hover state */
+  --color-warning-light: #5F4A1A;        /* Amber - Dark background */
+  --color-warning-text: #FAF089;         /* Amber - Text on dark bg */
+  --color-warning-border: #975A16;       /* Amber - Badge borders */
+
+  /* ===== STATUS COLORS - DANGER/ERROR ===== */
+  --color-danger: #FC8181;               /* Red - Brighter for dark */
+  --color-danger-hover: #F56565;         /* Red - Hover state */
+  --color-danger-light: #5C1A1A;         /* Red - Dark background */
+  --color-danger-text: #FEB2B2;          /* Red - Text on dark bg */
+  --color-danger-border: #9B2C2C;        /* Red - Badge borders */
+
+  /* ===== STATUS COLORS - INFO ===== */
+  --color-info: #63B3ED;                 /* Cyan - Brighter for dark */
+  --color-info-hover: #4299E1;           /* Cyan - Hover state */
+  --color-info-light: #1A365D;           /* Cyan - Dark background */
+  --color-info-text: #90CDF4;            /* Cyan - Text on dark bg */
+  --color-info-border: #2B6CB0;          /* Cyan - Badge borders */
+
+  /* ===== MAIN BACKGROUND COLOR ===== */
+  --color-background: #0D1117;         /* GitHub dark - sophisticated dark */
+
+  /* ===== SURFACE COLORS (Cards, Modals) ===== */
+  --color-surface: #161B22;            /* Elevated surface */
+
+  /* ===== CARD-SPECIFIC COLORS ===== */
+  --card-background: #161B22;          /* Elevated from body */
+  --card-border: #30363D;              /* Subtle border */
+  --shadow-card: none;                 /* No shadow in dark mode */
+
+  /* ===== TEXT COLORS - HIGH CONTRAST ===== */
+  --color-text-primary: #F9FAFB;       /* Near White - Better visibility */
+  --color-text-secondary: #D1D5DB;     /* Light Gray - Improved contrast */
+  --color-text-tertiary: #9CA3AF;      /* Medium Gray - Better readability */
+  --color-text-disabled: #6B7280;      /* Dim Gray */
+  --color-text-inverse: #0D1117;       /* Dark - For colored backgrounds */
+
+  /* ===== BORDER COLORS ===== */
+  --color-border: #30363D;
+  --color-border-strong: #484F58;
+
+  /* ===== INPUT COLORS ===== */
+  --color-input-bg: #0D1117;
+  --color-input-border: #30363D;
+  --color-input-border-focus: #5EEAD4;
+
+  /* ===== NEUTRAL COLORS (Inverted) ===== */
+  --color-neutral-50: #0D1117;
+  --color-neutral-100: #161B22;
+  --color-neutral-200: #21262D;
+  --color-neutral-300: #30363D;
+  --color-neutral-400: #484F58;
+  --color-neutral-500: #6B7280;
+  --color-neutral-600: #9CA3AF;
+  --color-neutral-700: #D1D5DB;
+  --color-neutral-800: #E5E7EB;
+  --color-neutral-900: #F9FAFB;
+
+  /* ===== TABLE-SPECIFIC COLORS ===== */
+  --color-table-header-bg: #161B22;      /* Elevated - Table headers */
+  --color-table-header-text: #F9FAFB;    /* Near white - Header text */
+  --color-table-row-hover: #21262D;      /* Darker - Row hover */
+  --color-table-border: #30363D;         /* Dark - Table borders */
+  --color-table-text: #D1D5DB;           /* Light gray - Table cells */
+
+  /* ===== LEGACY BACKGROUND COLORS (For compatibility) ===== */
+  --color-bg-primary: #0D1117;
+  --color-bg-secondary: #161B22;
+  --color-bg-tertiary: #21262D;
+  --color-surface-elevated: #21262D;
+
+  /* ===== SHADOWS (Subtle for dark mode) ===== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* ===================================
+   SPACING & OTHER CONSTANTS
+   =================================== */
+:root {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-base: 16px;       /* Base font size - NEVER go below 16px */
+  --line-height-base: 1.6;      /* Optimal for readability */
+  --font-weight-normal: 400;    /* Regular weight */
+  --font-weight-medium: 500;    /* Medium weight */
+  --font-weight-semibold: 600;  /* Semibold for labels */
+  --font-weight-bold: 700;      /* Bold for headings */
+  --font-weight-extrabold: 800; /* Extra bold for hero text */
+}
+
+/* ===================================
+   GLOBAL RESET & BASE STYLES
+   =================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== ROOT HTML AND BODY SETUP ===== */
+html {
+  height: 100%;
+  font-size: 100%; /* Respect user's browser font size preference */
+  scroll-behavior: auto !important; /* Disable smooth scrolling */
+  overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+}
+
+body {
+  /* Typography Foundation */
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);    /* 16px - Never go below this! */
+  font-weight: var(--font-weight-normal); /* 400 - Regular weight */
+  line-height: var(--line-height-base);   /* 1.6 - Optimal readability */
+
+  /* Colors */
+  background-color: var(--color-background);
+  color: var(--color-text-secondary);    /* Body text uses secondary color */
+
+  /* Rendering Optimization */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  /* Smooth Transitions */
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  /* Sticky Footer Setup */
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background-color: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* ===================================
+   TYPOGRAPHY - HEADINGS
+   =================================== */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);    /* Ultra-high contrast for headings */
+  font-weight: var(--font-weight-bold); /* 700 - Bold for all headings */
+  line-height: 1.2;                     /* Tighter for headings */
+  margin-bottom: 0.75em;
+  letter-spacing: -0.02em;              /* Slight negative tracking */
+}
+
+h1 {
+  font-size: 2.5rem;   /* 40px */
+  font-weight: var(--font-weight-extrabold); /* 800 for h1 */
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: 2rem;     /* 32px */
+  font-weight: var(--font-weight-bold); /* 700 */
+}
+
+h3 {
+  font-size: 1.5rem;   /* 24px */
+  font-weight: var(--font-weight-bold); /* 700 */
+}
+
+h4 {
+  font-size: 1.25rem;  /* 20px */
+  font-weight: var(--font-weight-semibold); /* 600 */
+}
+
+h5 {
+  font-size: 1.125rem; /* 18px */
+  font-weight: var(--font-weight-semibold); /* 600 */
+}
+
+h6 {
+  font-size: 1rem;     /* 16px */
+  font-weight: var(--font-weight-semibold); /* 600 */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===================================
+   TYPOGRAPHY - BODY TEXT
+   =================================== */
+p {
+  color: var(--color-text-secondary);   /* High contrast body text */
+  font-size: 1rem;                      /* 16px - Base size */
+  font-weight: var(--font-weight-normal); /* 400 - Regular */
+  line-height: 1.6;                     /* Optimal readability */
+  margin-bottom: 1em;
+}
+
+/* Large paragraph (lead text) */
+.lead,
+p.lead {
+  font-size: 1.125rem;  /* 18px */
+  font-weight: var(--font-weight-normal); /* 400 */
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+/* Small text */
+small,
+.text-small {
+  font-size: 0.875rem;  /* 14px */
+  color: var(--color-text-tertiary);
+}
+
+/* Lists */
+ul, ol {
+  color: var(--color-text-secondary);
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+li {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 0.5em;
+}
+
+/* ===================================
+   UTILITY TEXT CLASSES
+   =================================== */
+/* Subtle text (labels, captions, meta info) */
+.text-subtle,
+.caption,
+.meta-info {
+  color: var(--color-text-tertiary);
+  font-size: 0.875rem;  /* 14px */
+  font-weight: var(--font-weight-normal);
+}
+
+/* Disabled or placeholder text */
+.text-disabled {
+  color: var(--color-text-disabled);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Strong emphasis */
+strong,
+b {
+  font-weight: var(--font-weight-bold); /* 700 */
+  color: var(--color-text-primary);
+}
+
+/* Emphasis */
+em,
+i {
+  font-style: italic;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium); /* 500 */
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ===================================
+   HORIZONTAL RULE
+   =================================== */
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+/* ===================================
+   BLOCKQUOTE
+   =================================== */
+blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: 1.125rem;
+}
+
+/* Utility classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+/* Button Styles - Modern & Vibrant */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: inline-block;
+  font-family: var(--font-family);
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  background: #0F766E;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6C757D 0%, #545B62 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #545B62 0%, #3A3F44 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28A745 0%, #20C997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20C997 0%, #17A2B8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #DC3545 0%, #C82333 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #C82333 0%, #BD2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #17A2B8 0%, #138496 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+.btn-info:hover:not(:disabled) {
+  background: linear-gradient(135deg, #138496 0%, #117A8B 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #FFC107 0%, #E0A800 100%);
+  color: #000000;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: linear-gradient(135deg, #E0A800 0%, #D39E00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 10px 22px;
+  box-shadow: none;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+}
+
+/* ===================================
+   CARD COMPONENTS - VIBRANT & MODERN
+   =================================== */
+.card {
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #14B8A6, #20C997, #FFC107);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 12px 32px rgba(20, 184, 166, 0.12);
+  transform: translateY(-2px);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Light Mode:
+   - background: #ffffff (white)
+   - border: transparent
+   - shadow: visible (creates depth)
+
+   Dark Mode:
+   - background: #1e1e1e (elevated from #121212 body)
+   - border: #3a3a3a (visible)
+   - shadow: none (border creates separation)
+*/
+
+.card-header {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Form Styles - Clean & Modern */
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  background: var(--color-input-bg);
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-input-border-focus);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.form-control:disabled {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.form-control.error {
+  border-color: var(--color-danger);
+}
+
+.form-control.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.error-message {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+  font-family: var(--font-family);
+}
+
+/* Select Styles */
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+/* Alert Components */
+.alert {
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+
+.alert-error {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
+
+.alert-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+.alert-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mt-3 { margin-top: 30px; }
+.mb-1 { margin-bottom: 10px; }
+.mb-2 { margin-bottom: 20px; }
+.mb-3 { margin-bottom: 30px; }
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: var(--color-text-tertiary);
+}
+
+/* ===================================
+   DARK MODE - TEXT ON PRIMARY COLOR BACKGROUNDS
+   Override white text with dark text for better contrast
+   =================================== */
+html.dark .btn-primary {
+  color: var(--color-primary-text);
+}
+
+html.dark .btn-primary:hover:not(:disabled) {
+  color: var(--color-primary-text);
+}
+
+html.dark .btn-outline:hover:not(:disabled) {
+  color: var(--color-primary-text);
+}

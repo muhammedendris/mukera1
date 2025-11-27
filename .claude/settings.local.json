@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(npm run build)",
+      "Bash(npm install:*)",
+      "Bash(dir \"C:\\Users\\Hp\\Desktop\\INTENSHIP\")",
+      "Bash(dir:*)",
+      "Bash(tasklist:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(nul)",
+      "Bash(start test-password-reset.html)",
+      "Bash(taskkill:*)",
+      "Bash(ping:*)",
+      "Bash(node test-email.js:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

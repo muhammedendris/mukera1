@@ -1,0 +1,376 @@
+/* Progress Container */
+.progress-container {
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.progress-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.progress-percentage {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-primary);
+  transition: all 0.3s ease;
+}
+
+.progress-percentage.beginning {
+  color: var(--color-neutral-600);
+}
+
+.progress-percentage.started {
+  color: var(--color-warning);
+}
+
+.progress-percentage.good {
+  color: var(--color-info);
+}
+
+.progress-percentage.excellent {
+  color: var(--color-primary);
+}
+
+.progress-percentage.complete {
+  color: var(--color-success);
+}
+
+/* Progress Bar */
+.progress-bar-wrapper {
+  margin-bottom: 24px;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 32px;
+  background: var(--color-neutral-100);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 16px;
+  transition: width 0.6s ease, background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient for progress bar */
+.progress-bar-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.progress-bar-fill.beginning {
+  background: linear-gradient(90deg, var(--color-neutral-500), var(--color-neutral-600));
+}
+
+.progress-bar-fill.started {
+  background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
+}
+
+.progress-bar-fill.good {
+  background: linear-gradient(90deg, var(--color-info), var(--color-info-hover));
+}
+
+.progress-bar-fill.excellent {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+}
+
+.progress-bar-fill.complete {
+  background: linear-gradient(90deg, var(--color-success), var(--color-success-hover));
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.progress-bar-text {
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Progress Stats */
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--color-neutral-50);
+  border-radius: 8px;
+}
+
+.progress-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Progress Message */
+.progress-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.progress-message.beginning,
+.progress-message.started {
+  background: var(--color-warning-light);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.progress-message.good {
+  background: var(--color-info-light);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+.progress-message.excellent {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.progress-message.complete {
+  background: var(--color-success-light);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+  animation: celebration 0.5s ease;
+}
+
+@keyframes celebration {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Milestones */
+.progress-milestones {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.milestone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+}
+
+.milestone-marker {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  border: 3px solid var(--color-neutral-300);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.milestone.achieved .milestone-marker {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.milestone.achieved .milestone-marker::after {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: var(--color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.milestone-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.milestone.achieved .milestone-label {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .progress-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .progress-percentage {
+    font-size: 28px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .progress-milestones {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .milestone {
+    flex: 0 0 calc(50% - 6px);
+  }
+
+  .milestone-marker {
+    width: 40px;
+    height: 40px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-container {
+    padding: 16px;
+  }
+
+  .progress-title {
+    font-size: 16px;
+  }
+
+  .progress-percentage {
+    font-size: 24px;
+  }
+
+  .progress-bar-track {
+    height: 24px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .milestone-marker {
+    width: 36px;
+    height: 36px;
+    font-size: 10px;
+  }
+}
+
+/* ===================================
+   DARK MODE - TEXT ON PRIMARY COLOR BACKGROUNDS
+   Override white text with dark text for better contrast on light teal
+   =================================== */
+html.dark .milestone.achieved .milestone-marker {
+  color: var(--color-primary-text);
+}

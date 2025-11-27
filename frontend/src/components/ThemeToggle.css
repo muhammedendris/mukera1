@@ -1,0 +1,124 @@
+/* Theme Toggle Component */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  padding: 6px 14px 6px 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  transition: background 0.3s ease;
+}
+
+.theme-toggle:hover .theme-toggle-track {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* When dark mode is active, move thumb to the right */
+[data-theme='dark'] .theme-toggle-thumb {
+  transform: translateX(16px);
+}
+
+.theme-toggle-label {
+  user-select: none;
+  min-width: 35px;
+  text-align: left;
+}
+
+/* Alternate style for use in settings/profile pages (not in navbar) */
+.theme-toggle.settings-toggle {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 8px 16px 8px 8px;
+}
+
+.theme-toggle.settings-toggle:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+}
+
+.theme-toggle.settings-toggle .theme-toggle-track {
+  background: var(--color-bg-secondary);
+  width: 44px;
+  height: 24px;
+}
+
+.theme-toggle.settings-toggle .theme-toggle-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle.settings-toggle[data-theme='dark'] .theme-toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* Animation for icon change */
+.theme-toggle-thumb svg {
+  animation: iconFadeIn 0.3s ease;
+}
+
+@keyframes iconFadeIn {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-toggle-label {
+    display: none;
+  }
+
+  .theme-toggle {
+    padding: 6px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+}
