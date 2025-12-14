@@ -14,7 +14,7 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
 
   // Initialize Socket.IO
   useEffect(() => {
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
 
     socketRef.current = io(API_URL, {
       auth: {
@@ -85,7 +85,7 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
 
       const response = await fetch(`${API_URL}/api/chats/${applicationId}`, {
         headers: {
@@ -113,7 +113,7 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
 
       const response = await fetch(`${API_URL}/api/chats`, {
         method: 'POST',

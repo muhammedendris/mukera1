@@ -26,7 +26,7 @@ const AdminDashboard = () => {
 
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
-    : 'http://localhost:5000';
+    : 'https://internship-api-cea6.onrender.com';
 
   useEffect(() => {
     loadData();

@@ -28,7 +28,7 @@ const ContactPage = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/contact/send-email', formData);
+      const response = await axios.post('https://internship-api-cea6.onrender.com/api/contact/send-email', formData);
 
       if (response.data.success) {
         setSubmitted(true);

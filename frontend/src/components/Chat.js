@@ -34,7 +34,7 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
     loadMessages();
 
     // Connect to Socket.io server for real-time updates
-    const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://internship-api-cea6.onrender.com';
     socketRef.current = io(SOCKET_URL, {
       auth: {
         token: localStorage.getItem('token')

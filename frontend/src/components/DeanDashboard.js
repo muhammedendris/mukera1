@@ -16,7 +16,7 @@ const DeanDashboard = () => {
 
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
-    : 'http://localhost:5000';
+    : 'https://internship-api-cea6.onrender.com';
 
   useEffect(() => {
     loadPendingStudents();
@@ -76,7 +76,7 @@ const DeanDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/applications/accepted-students`,
+        `${process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api'}/applications/accepted-students`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
