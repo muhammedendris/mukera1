@@ -8,6 +8,8 @@ import ActivityLog from '../components/profile/ActivityLog';
 import { User, Lock, Activity, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -21,7 +23,7 @@ const ProfilePage = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch(`${API_URL}/users/profile`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -39,7 +41,7 @@ const ProfilePage = () => {
 
   const handleUpdateAvatar = async (formData) => {
     try {
-      const response = await fetch('/api/users/avatar', {
+      const response = await fetch(`${API_URL}/users/avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -57,7 +59,7 @@ const ProfilePage = () => {
 
   const handleSavePersonalInfo = async (formData) => {
     try {
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch(`${API_URL}/users/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

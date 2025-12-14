@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
+
 // Base API Hook
 export const useAPI = () => {
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export const useProfile = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const data = await request('/api/users/profile');
+      const data = await request(`${API_URL}/users/profile`);
       setProfile(data.user);
       return data.user;
     } catch (err) {
@@ -61,7 +63,7 @@ export const useProfile = () => {
 
   const updateProfile = useCallback(async (updates) => {
     try {
-      const data = await request('/api/users/profile', {
+      const data = await request(`${API_URL}/users/profile`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
       });
@@ -74,7 +76,7 @@ export const useProfile = () => {
 
   const uploadAvatar = useCallback(async (formData) => {
     try {
-      const response = await fetch('/api/users/avatar', {
+      const response = await fetch(`${API_URL}/users/avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -107,7 +109,7 @@ export const useApplications = () => {
 
   const fetchApplications = useCallback(async () => {
     try {
-      const data = await request('/api/applications');
+      const data = await request(`${API_URL}/applications`);
       setApplications(data.applications);
       return data.applications;
     } catch (err) {
@@ -119,7 +121,7 @@ export const useApplications = () => {
 
   const submitApplication = useCallback(async (applicationData) => {
     try {
-      const data = await request('/api/applications', {
+      const data = await request(`${API_URL}/applications`, {
         method: 'POST',
         body: JSON.stringify(applicationData),
       });
@@ -132,7 +134,7 @@ export const useApplications = () => {
 
   const updateApplicationStatus = useCallback(async (applicationId, status, additionalData = {}) => {
     try {
-      const data = await request(`/api/applications/${applicationId}/status`, {
+      const data = await request(`${API_URL}/applications/${applicationId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status, ...additionalData }),
       });
@@ -147,7 +149,7 @@ export const useApplications = () => {
 
   const assignAdvisor = useCallback(async (applicationId, advisorId) => {
     try {
-      const data = await request(`/api/applications/${applicationId}/assign-advisor`, {
+      const data = await request(`${API_URL}/applications/${applicationId}/assign-advisor`, {
         method: 'PATCH',
         body: JSON.stringify({ advisorId }),
       });
@@ -185,7 +187,7 @@ export const useReports = (applicationId) => {
   const fetchReports = useCallback(async () => {
     if (!applicationId) return;
     try {
-      const data = await request(`/api/reports/application/${applicationId}`);
+      const data = await request(`${API_URL}/reports/application/${applicationId}`);
       setReports(data.reports);
       return data.reports;
     } catch (err) {
@@ -206,7 +208,7 @@ export const useReports = (applicationId) => {
         formData.append('report', file);
       }
 
-      const response = await fetch('/api/reports', {
+      const response = await fetch(`${API_URL}/reports`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -227,7 +229,7 @@ export const useReports = (applicationId) => {
 
   const addFeedback = useCallback(async (reportId, feedback) => {
     try {
-      const data = await request(`/api/reports/${reportId}/feedback`, {
+      const data = await request(`${API_URL}/reports/${reportId}/feedback`, {
         method: 'PATCH',
         body: JSON.stringify({ feedback }),
       });
@@ -256,7 +258,7 @@ export const useNotifications = () => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const data = await request('/api/notifications');
+      const data = await request(`${API_URL}/notifications`);
       setNotifications(data.notifications);
       const unread = data.notifications.filter(n => !n.read).length;
       setUnreadCount(unread);
@@ -270,7 +272,7 @@ export const useNotifications = () => {
 
   const markAsRead = useCallback(async (notificationId) => {
     try {
-      await request(`/api/notifications/${notificationId}/read`, {
+      await request(`${API_URL}/notifications/${notificationId}/read`, {
         method: 'PATCH',
       });
       setNotifications(notifications.map(n =>
@@ -284,7 +286,7 @@ export const useNotifications = () => {
 
   const markAllAsRead = useCallback(async () => {
     try {
-      await request('/api/notifications/mark-all-read', {
+      await request(`${API_URL}/notifications/mark-all-read`, {
         method: 'POST',
       });
       setNotifications(notifications.map(n => ({ ...n, read: true })));
@@ -322,7 +324,7 @@ export const useProgress = (applicationId) => {
   const fetchProgress = useCallback(async () => {
     if (!applicationId) return;
     try {
-      const data = await request(`/api/applications/${applicationId}`);
+      const data = await request(`${API_URL}/applications/${applicationId}`);
       setProgress({
         currentProgress: data.application.currentProgress || 0,
         internshipDurationWeeks: data.application.internshipDurationWeeks || 0,
@@ -351,7 +353,7 @@ export const useChat = () => {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const data = await request('/api/chats');
+      const data = await request(`${API_URL}/chats`);
       setConversations(data.chats);
       return data.chats;
     } catch (err) {
@@ -363,7 +365,7 @@ export const useChat = () => {
 
   const fetchMessages = useCallback(async (chatId) => {
     try {
-      const data = await request(`/api/chats/${chatId}/messages`);
+      const data = await request(`${API_URL}/chats/${chatId}/messages`);
       return data.messages;
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -379,7 +381,7 @@ export const useChat = () => {
         formData.append('file', file);
       }
 
-      const response = await fetch(`/api/chats/${chatId}/messages`, {
+      const response = await fetch(`${API_URL}/chats/${chatId}/messages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

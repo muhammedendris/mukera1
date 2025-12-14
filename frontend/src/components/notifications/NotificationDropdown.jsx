@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Bell, Settings, X, CheckCircle, FileText, MessageSquare, AlertCircle } from 'lucide-react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
+
 const NotificationDropdown = ({ userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -25,7 +27,7 @@ const NotificationDropdown = ({ userId }) => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications', {
+      const response = await fetch(`${API_URL}/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -41,7 +43,7 @@ const NotificationDropdown = ({ userId }) => {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await fetch('/api/notifications?unread=true&count=true', {
+      const response = await fetch(`${API_URL}/notifications?unread=true&count=true`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -57,7 +59,7 @@ const NotificationDropdown = ({ userId }) => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -77,7 +79,7 @@ const NotificationDropdown = ({ userId }) => {
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch('/api/notifications/mark-all-read', {
+      const response = await fetch(`${API_URL}/notifications/mark-all-read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

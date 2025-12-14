@@ -14,9 +14,12 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
 
   // Initialize Socket.IO
   useEffect(() => {
-    const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
+    // Use base URL without /api for socket.io connection
+    const SOCKET_URL = process.env.REACT_APP_API_URL
+      ? process.env.REACT_APP_API_URL.replace('/api', '')
+      : 'https://internship-api-cea6.onrender.com';
 
-    socketRef.current = io(API_URL, {
+    socketRef.current = io(SOCKET_URL, {
       auth: {
         token: localStorage.getItem('token'),
       },
@@ -85,9 +88,9 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
 
-      const response = await fetch(`${API_URL}/api/chats/${applicationId}`, {
+      const response = await fetch(`${API_URL}/chats/${applicationId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -113,9 +116,9 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
 
-      const response = await fetch(`${API_URL}/api/chats`, {
+      const response = await fetch(`${API_URL}/chats`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
