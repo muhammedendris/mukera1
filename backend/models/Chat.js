@@ -14,7 +14,11 @@ const chatSchema = new mongoose.Schema({
   receiver: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false
+  },
+  isPendingAdvisorAssignment: {
+    type: Boolean,
+    default: false
   },
   message: {
     type: String,
@@ -35,5 +39,7 @@ const chatSchema = new mongoose.Schema({
 
 // Index for efficient querying
 chatSchema.index({ application: 1, timestamp: -1 });
+chatSchema.index({ isPendingAdvisorAssignment: 1, application: 1 });
+chatSchema.index({ receiver: 1, isRead: 1 });
 
 module.exports = mongoose.model('Chat', chatSchema);

@@ -1,16 +1,33 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
 const dotenv = require('dotenv');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
 // Load environment variables
 dotenv.config();
 
 // Create Express app
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173', // Vite port (5173) or 3000
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Make io accessible to routes
+app.set('io', io);
 
 // Middleware
+app.use(compression()); // Enable gzip compression for all responses
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -26,6 +43,7 @@ const advisorRoutes = require('./routes/advisors');
 const chatRoutes = require('./routes/chats');
 const evaluationRoutes = require('./routes/evaluations');
 const reportRoutes = require('./routes/reports');
+const contactRoutes = require('./routes/contact');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -35,6 +53,7 @@ app.use('/api/advisors', advisorRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -50,25 +69,51 @@ app.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'Internship Management System API',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      users: '/api/users',
-      applications: '/api/applications',
-      advisors: '/api/advisors',
-      chats: '/api/chats',
-      evaluations: '/api/evaluations',
-      reports: '/api/reports'
-    }
+    version: '1.0.0'
+  });
+});
+
+// Database connection (MODIFIED TO FIX ETIMEOUT)
+const connectDB = async () => {
+  try {
+    // እዚህ ጋር ነው ለውጡ! የ Atlas አድራሻዎችን በቀጥታ አስገብተናል (Hardcoded)
+    // ይህ የ DNS ችግርን ይቀርፋል
+    const mongoURI = 'mongodb://muhammedendris:mau1401867@ac-vfrshjj-shard-00-00.ggluymy.mongodb.net:27017,ac-vfrshjj-shard-00-01.ggluymy.mongodb.net:27017,ac-vfrshjj-shard-00-02.ggluymy.mongodb.net:27017/internship-management?ssl=true&authSource=admin&retryWrites=true&w=majority';
+
+    await mongoose.connect(mongoURI); 
+    
+    console.log('✅ MongoDB Connected Successfully to ATLAS (Online)');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    process.exit(1);
+  }
+};
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  socket.on('join-chat', (applicationId) => {
+    socket.join(`chat-${applicationId}`);
+    console.log(`Socket ${socket.id} joined chat-${applicationId}`);
+  });
+
+  socket.on('leave-chat', (applicationId) => {
+    socket.leave(`chat-${applicationId}`);
+  });
+
+  socket.on('typing', ({ applicationId, isTyping }) => {
+    socket.to(`chat-${applicationId}`).emit('user-typing', { isTyping });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
   });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Global error handler
@@ -81,28 +126,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log('MongoDB connected successfully');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
-  }
-};
-
 // Start server
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`API URL: http://localhost:${PORT}/api`);
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 });
 

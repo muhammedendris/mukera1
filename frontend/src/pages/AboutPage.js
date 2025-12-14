@@ -1,4 +1,5 @@
 import React from 'react';
+import MeetOurTeam from '../components/MeetOurTeam';
 import '../App.css';
 
 const AboutPage = () => {
@@ -79,46 +80,8 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="team-section">
-        <div className="container">
-          <h2 className="section-title">Meet Our Team</h2>
-          <div className="team-grid">
-            <div className="team-member">
-              <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop"
-                alt="Team Member"
-              />
-              <h3>John Anderson</h3>
-              <p className="role">Program Director</p>
-            </div>
-            <div className="team-member">
-              <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop"
-                alt="Team Member"
-              />
-              <h3>Sarah Johnson</h3>
-              <p className="role">Student Relations Manager</p>
-            </div>
-            <div className="team-member">
-              <img
-                src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop"
-                alt="Team Member"
-              />
-              <h3>Michael Chen</h3>
-              <p className="role">Company Partnerships Lead</p>
-            </div>
-            <div className="team-member">
-              <img
-                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop"
-                alt="Team Member"
-              />
-              <h3>Emily Davis</h3>
-              <p className="role">Technical Coordinator</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Team Section - Ethiopian Team */}
+      <MeetOurTeam />
 
       {/* Stats Section */}
       <section className="stats-section">

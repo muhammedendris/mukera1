@@ -1,8 +1,8 @@
-/* Navbar Styles - Sleek & Minimal (56px height) */
+/* Navbar Styles - Vibrant Royal Blue Theme (56px height) */
 .navbar {
-  background: var(--card-background);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #0060AA 0%, #004D8C 100%);
+  border-bottom: 2px solid #004D8C;
+  box-shadow: 0 2px 8px rgba(0, 96, 170, 0.2);
   padding: 0;
   height: 56px;
   position: fixed;
@@ -31,15 +31,27 @@
 .navbar-brand {
   font-size: 20px;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: #ffffff;
   text-decoration: none;
   letter-spacing: -0.5px;
   transition: color 0.2s ease;
 }
 
 .navbar-brand:hover {
-  color: var(--color-primary);
+  color: #CCE0FF;
   text-decoration: none;
+}
+
+.navbar-brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .navbar-menu {
@@ -50,7 +62,7 @@
 }
 
 .nav-link {
-  color: var(--color-text-primary);
+  color: #ffffff;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
@@ -69,12 +81,12 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--color-primary);
+  background: #CCE0FF;
   transition: width 0.2s ease;
 }
 
 .nav-link:hover {
-  color: var(--color-primary);
+  color: #CCE0FF;
   text-decoration: none;
 }
 
@@ -90,8 +102,251 @@
 
 .user-info {
   font-size: 13px;
-  color: var(--color-text-tertiary);
+  color: #ffffff;
   font-weight: 500;
+}
+
+/* Left Section - Brand + Auth Buttons */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Desktop: Hide left buttons, show right buttons (in nav menu) */
+.auth-buttons-left {
+  display: none; /* Hidden on desktop */
+}
+
+.auth-buttons-right {
+  display: flex; /* Visible on desktop */
+}
+
+/* Hamburger Menu Button - Hidden on Desktop */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+.hamburger:hover {
+  opacity: 0.7;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 3px;
+  background-color: var(--color-text-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Hamburger Animation - Transforms to X when active */
+.hamburger.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Responsive Mobile Styles - Tablet and Mobile Devices */
+@media (max-width: 768px) {
+  /* Show hamburger menu button on mobile */
+  .hamburger {
+    display: flex;
+  }
+
+  /* Mobile: Show left buttons (next to brand), hide right buttons */
+  .auth-buttons-left {
+    display: flex !important; /* Show on mobile */
+  }
+
+  .auth-buttons-right {
+    display: none !important; /* Hide on mobile */
+  }
+
+  /* Adjust auth button sizes for mobile */
+  .auth-buttons .nav-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Reduce gap on mobile */
+  .navbar-left {
+    gap: 8px;
+  }
+
+  .auth-buttons {
+    gap: 6px;
+  }
+
+  /* Transform desktop menu into mobile dropdown */
+  .navbar-menu {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: var(--card-background);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  /* Active mobile menu - slides down smoothly */
+  .navbar-menu.active {
+    max-height: 500px;
+    opacity: 1;
+    padding: 8px 0;
+  }
+
+  /* Stack navigation links vertically */
+  .nav-link {
+    width: 100%;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--color-border);
+    height: auto;
+    justify-content: flex-start;
+  }
+
+  .nav-link:last-of-type {
+    border-bottom: none;
+  }
+
+  /* Remove underline hover effect on mobile */
+  .nav-link::after {
+    display: none;
+  }
+
+  .nav-link:hover {
+    background: var(--color-hover);
+  }
+
+  /* Full-width buttons on mobile */
+  .nav-btn {
+    width: calc(100% - 48px);
+    margin: 8px 24px;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+  }
+
+  /* User info styling on mobile */
+  .user-info {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--color-border);
+    display: block;
+    width: 100%;
+  }
+}
+
+/* Small Mobile Devices - Enhanced mobile experience */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 8px;
+  }
+
+  .navbar-brand {
+    font-size: 14px;
+  }
+
+  .hamburger {
+    width: 24px;
+    height: 20px;
+  }
+
+  /* Make auth buttons much smaller on small screens */
+  .auth-buttons-left .nav-btn {
+    padding: 4px 6px;
+    font-size: 9px;
+  }
+
+  /* Reduce all gaps */
+  .navbar-left {
+    gap: 4px;
+  }
+
+  .auth-buttons {
+    gap: 3px;
+  }
+
+  .nav-link {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+
+  .nav-btn {
+    width: calc(100% - 40px);
+    margin: 6px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Extra Small Mobile Devices - Aggressive scaling */
+@media (max-width: 360px) {
+  .navbar {
+    padding: 0 6px;
+  }
+
+  .navbar-brand {
+    font-size: 12px;
+  }
+
+  .hamburger {
+    width: 22px;
+    height: 18px;
+  }
+
+  /* Ultra compact auth buttons */
+  .auth-buttons-left .nav-btn {
+    padding: 3px 5px;
+    font-size: 8px;
+  }
+
+  /* Minimal gaps */
+  .navbar-left {
+    gap: 3px;
+  }
+
+  .auth-buttons {
+    gap: 2px;
+  }
+
+  .nav-link {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .nav-btn {
+    width: calc(100% - 32px);
+    margin: 5px 16px;
+    font-size: 13px;
+  }
 }
 
 /* Main Content */
@@ -126,6 +381,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+.footer-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-logo-image {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
 }
 
 .footer-logo {
@@ -174,7 +441,7 @@
 }
 
 .footer-link:hover {
-  color: #5EEAD4;
+  color: #7DBADF;
 }
 
 /* Footer Bottom Bar */
@@ -213,9 +480,9 @@
 }
 
 .footer-social-link:hover {
-  background: #5EEAD4;
+  background: #7DBADF;
   color: white;
-  border-color: #5EEAD4;
+  border-color: #7DBADF;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(94, 234, 212, 0.3);
 }
@@ -278,7 +545,7 @@ html.dark .footer-link {
 }
 
 html.dark .footer-link:hover {
-  color: #5EEAD4;
+  color: #7DBADF;
 }
 
 html.dark .footer-copyright {
@@ -292,16 +559,17 @@ html.dark .footer-social-link {
 }
 
 html.dark .footer-social-link:hover {
-  background: #5EEAD4;
+  background: #7DBADF;
   color: white;
-  border-color: #5EEAD4;
+  border-color: #7DBADF;
   box-shadow: 0 4px 8px rgba(94, 234, 212, 0.3);
 }
 
 /* Home Page Styles */
+/* Hero Section Styles - Light mode with darker overlay for readability */
 .hero-section {
   height: 600px;
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
     url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&h=900&fit=crop') center/cover;
   display: flex;
   align-items: center;
@@ -320,6 +588,7 @@ html.dark .footer-social-link:hover {
   font-size: 56px;
   font-weight: 700;
   margin-bottom: 20px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .hero-subtitle {
@@ -328,6 +597,7 @@ html.dark .footer-social-link:hover {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
 .hero-buttons {
@@ -1293,6 +1563,12 @@ html.dark .cta-section p {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Dark mode - lighter overlay for hero section since background is already dark */
+html.dark .hero-section {
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&h=900&fit=crop') center/cover;
+}
+
 html.dark .about-hero {
   color: #FFFFFF;
 }
@@ -1345,4 +1621,74 @@ html.dark .pagination-btn.active {
 
 html.dark .milestone.achieved .milestone-marker {
   color: var(--color-primary-text);
+}
+
+/* ===================================
+   UNIVERSITY SELECT DROPDOWN - MODERN STYLING
+   =================================== */
+
+/* Remove default select styling and add custom arrow */
+.university-select,
+select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 40px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover state - teal border and subtle shadow */
+.university-select:hover,
+select.form-control:hover {
+  border-color: #0060AA !important;
+  box-shadow: 0 2px 4px rgba(20, 184, 166, 0.1);
+}
+
+/* Focus state - teal accent with glow effect */
+.university-select:focus,
+select.form-control:focus {
+  border-color: #0060AA !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  outline: none;
+}
+
+/* Option styling */
+.university-select option,
+select.form-control option {
+  padding: 12px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Dark mode support for dropdown */
+html.dark .university-select,
+html.dark select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D1D5DB' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-color: #1F2937;
+  border-color: #374151;
+  color: #D1D5DB;
+}
+
+html.dark .university-select option,
+html.dark select.form-control option {
+  background: #1F2937;
+  color: #D1D5DB;
+}
+
+html.dark .university-select:hover,
+html.dark select.form-control:hover {
+  border-color: #5CA8E8 !important;
+  box-shadow: 0 2px 4px rgba(92, 168, 232, 0.2);
+}
+
+html.dark .university-select:focus,
+html.dark select.form-control:focus {
+  border-color: #5CA8E8 !important;
+  box-shadow: 0 0 0 3px rgba(92, 168, 232, 0.1);
 }

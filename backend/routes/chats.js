@@ -53,11 +53,19 @@ router.post(
       }
 
       // Determine sender and receiver
-      let sender, receiver;
+      let sender, receiver, isPendingAdvisorAssignment = false;
       if (isStudent) {
         sender = application.student._id;
-        receiver = application.assignedAdvisor._id;
+
+        // KEY CHANGE: Allow null receiver if no advisor assigned
+        if (application.assignedAdvisor) {
+          receiver = application.assignedAdvisor._id;
+        } else {
+          receiver = null;
+          isPendingAdvisorAssignment = true;
+        }
       } else {
+        // Advisor sending message
         sender = application.assignedAdvisor._id;
         receiver = application.student._id;
       }
@@ -67,14 +75,21 @@ router.post(
         application: applicationId,
         sender,
         receiver,
-        message
+        message,
+        isPendingAdvisorAssignment
       });
 
       await chat.save();
 
       // Populate sender and receiver details
       await chat.populate('sender', 'fullName role');
-      await chat.populate('receiver', 'fullName role');
+      if (chat.receiver) {
+        await chat.populate('receiver', 'fullName role');
+      }
+
+      // Emit real-time message via Socket.io
+      const io = req.app.get('io');
+      io.to(`chat-${applicationId}`).emit('new-message', chat);
 
       res.status(201).json({
         success: true,
@@ -91,6 +106,30 @@ router.post(
     }
   }
 );
+
+// @route   GET /api/chats/unread/count
+// @desc    Get unread message count
+// @access  Private
+router.get('/unread/count', isAuthenticated, async (req, res) => {
+  try {
+    const unreadCount = await Chat.countDocuments({
+      receiver: req.user._id,
+      isRead: false
+    });
+
+    res.json({
+      success: true,
+      unreadCount
+    });
+  } catch (error) {
+    console.error('Get unread count error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
 
 // @route   GET /api/chats/:applicationId
 // @desc    Get chat history for an application
@@ -152,22 +191,73 @@ router.get('/:applicationId', isAuthenticated, async (req, res) => {
   }
 });
 
-// @route   GET /api/chats/unread/count
-// @desc    Get unread message count
-// @access  Private
-router.get('/unread/count', isAuthenticated, async (req, res) => {
+// @route   DELETE /api/chats/:applicationId
+// @desc    Clear all messages for an application (PERMANENT)
+// @access  Private (Student or Advisor)
+router.delete('/:applicationId', isAuthenticated, async (req, res) => {
   try {
-    const unreadCount = await Chat.countDocuments({
-      receiver: req.user._id,
-      isRead: false
-    });
+    const { applicationId } = req.params;
+
+    console.log('\n🗑️ ========================================');
+    console.log('CLEAR CHAT REQUEST');
+    console.log('========================================');
+    console.log('Application ID:', applicationId);
+    console.log('User:', req.user.fullName, `(${req.user.role})`);
+
+    // Find the application
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      console.log('❌ Application not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found'
+      });
+    }
+
+    // Verify user is part of this application
+    const isStudent = req.user._id.toString() === application.student.toString();
+    const isAdvisor = application.assignedAdvisor &&
+                      req.user._id.toString() === application.assignedAdvisor.toString();
+
+    // Allow student to clear even without advisor, or allow advisor to clear
+    if (!isStudent && !isAdvisor) {
+      console.log('❌ Access denied - User not authorized');
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Count messages before deletion
+    const messageCount = await Chat.countDocuments({ application: applicationId });
+    console.log(`📊 Found ${messageCount} messages to delete`);
+
+    // Delete all messages for this application
+    const deleteResult = await Chat.deleteMany({ application: applicationId });
+    console.log(`✅ Deleted ${deleteResult.deletedCount} messages`);
+
+    // Emit real-time clear chat event via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat-${applicationId}`).emit('chat-cleared', {
+        applicationId,
+        clearedBy: req.user.fullName,
+        timestamp: new Date()
+      });
+      console.log('📡 Socket.io event emitted: chat-cleared');
+    } else {
+      console.log('⚠️ Socket.io not available - skipping real-time event');
+    }
+    console.log('========================================\n');
 
     res.json({
       success: true,
-      unreadCount
+      message: 'Chat cleared successfully',
+      deletedCount: deleteResult.deletedCount
     });
   } catch (error) {
-    console.error('Get unread count error:', error);
+    console.error('❌ Clear chat error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

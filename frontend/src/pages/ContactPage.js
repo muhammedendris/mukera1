@@ -1,31 +1,49 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import '../App.css';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    phone: '',
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real application, this would send the message to an API
-    console.log('Contact form submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 3000);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/contact/send-email', formData);
+
+      if (response.data.success) {
+        setSubmitted(true);
+        // Clear form after 3 seconds
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: '', email: '', phone: '', message: '' });
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Contact form error:', err);
+      setError(err.response?.data?.message || 'Failed to send message. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,15 +71,15 @@ const ContactPage = () => {
               <div className="contact-details">
                 <div className="contact-item">
                   <h3>Email</h3>
-                  <p>info@internshipportal.com</p>
+                  <p>info@anrs-ict.gov.et</p>
                 </div>
                 <div className="contact-item">
                   <h3>Phone</h3>
-                  <p>+1 (555) 123-4567</p>
+                  <p>+251 58 220 1234</p>
                 </div>
                 <div className="contact-item">
                   <h3>Address</h3>
-                  <p>123 Education Street<br />Campus Building, Suite 456<br />City, State 12345</p>
+                  <p>ANRS Innovation and Technology Bureau<br />Kebele 4, Bahir Dar<br />Amhara Region, Ethiopia</p>
                 </div>
                 <div className="contact-item">
                   <h3>Office Hours</h3>
@@ -87,6 +105,12 @@ const ContactPage = () => {
                 </div>
               )}
 
+              {error && (
+                <div className="alert alert-danger">
+                  {error}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-group">
                   <label htmlFor="name">Full Name</label>
@@ -98,6 +122,7 @@ const ContactPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -111,19 +136,22 @@ const ContactPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="subject">Subject</label>
+                  <label htmlFor="phone">Phone Number</label>
                   <input
-                    type="text"
-                    id="subject"
-                    name="subject"
+                    type="tel"
+                    id="phone"
+                    name="phone"
                     className="form-control"
-                    value={formData.subject}
+                    value={formData.phone}
                     onChange={handleChange}
                     required
+                    disabled={loading}
+                    placeholder="+1 (555) 123-4567"
                   />
                 </div>
 
@@ -137,11 +165,16 @@ const ContactPage = () => {
                     value={formData.message}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   ></textarea>
                 </div>
 
-                <button type="submit" className="btn btn-primary btn-lg">
-                  Send Message
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             </div>

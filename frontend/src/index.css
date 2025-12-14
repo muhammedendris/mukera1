@@ -6,10 +6,10 @@
    Soft Gray + Rich Dark Text + Professional Teal
    =================================== */
 :root {
-  /* ===== PRIMARY COLORS - PROFESSIONAL TEAL ===== */
-  --color-primary: #14B8A6;              /* Teal - Main accent */
-  --color-primary-hover: #0D9488;        /* Darker Teal - Hover state */
-  --color-primary-light: #CCFBF1;        /* Light Teal - Backgrounds */
+  /* ===== PRIMARY COLORS - VIBRANT ROYAL BLUE ===== */
+  --color-primary: #0060AA;              /* Vibrant Royal Blue - Main accent */
+  --color-primary-hover: #004D8C;        /* Darker Royal Blue - Hover state */
+  --color-primary-light: #CCE0F5;        /* Light Royal Blue - Backgrounds */
   --color-primary-text: #ffffff;         /* White - Text on primary buttons */
 
   /* ===== SECONDARY COLORS ===== */
@@ -69,7 +69,7 @@
   /* ===== INPUT COLORS ===== */
   --color-input-bg: #FFFFFF;
   --color-input-border: #E9ECEF;
-  --color-input-border-focus: #14B8A6;
+  --color-input-border-focus: #0060AA;
 
   /* ===== NEUTRAL COLORS ===== */
   --color-neutral-50: #F8F9FA;
@@ -105,14 +105,14 @@
 
 /* ===================================
    DARK MODE - ACTIVATED BY html.dark
-   Professional Teal accent maintained
+   Professional Royal Blue accent maintained
    =================================== */
 html.dark {
-  /* ===== PRIMARY COLORS - PROFESSIONAL TEAL (Lighter for dark) ===== */
-  --color-primary: #5EEAD4;              /* Lighter Teal for dark bg */
-  --color-primary-hover: #2DD4BF;        /* Medium Teal - Hover state */
-  --color-primary-light: #134E4A;        /* Dark Teal - Backgrounds */
-  --color-primary-text: #0D1117;         /* Dark text - Better contrast on light teal */
+  /* ===== PRIMARY COLORS - ROYAL BLUE (Lighter for dark) ===== */
+  --color-primary: #3D8FD8;              /* Lighter Royal Blue for dark bg */
+  --color-primary-hover: #5CA8E8;        /* Lighter Royal Blue - Hover state */
+  --color-primary-light: #0A1E33;        /* Dark Royal Blue - Backgrounds */
+  --color-primary-text: #ffffff;         /* White text - Better contrast */
 
   /* ===== SECONDARY COLORS ===== */
   --color-secondary: #ADB5BD;
@@ -171,7 +171,7 @@ html.dark {
   /* ===== INPUT COLORS ===== */
   --color-input-bg: #0D1117;
   --color-input-border: #30363D;
-  --color-input-border-focus: #5EEAD4;
+  --color-input-border-focus: #5CA8E8;
 
   /* ===== NEUTRAL COLORS (Inverted) ===== */
   --color-neutral-50: #0D1117;
@@ -485,20 +485,20 @@ blockquote {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+  background: linear-gradient(135deg, #0060AA 0%, #004D8C 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 96, 170, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+  background: linear-gradient(135deg, #004D8C 0%, #003D6E 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 96, 170, 0.4);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  background: #0F766E;
+  background: #003D6E;
 }
 
 .btn-secondary {
@@ -570,9 +570,9 @@ blockquote {
 }
 
 .btn-outline:hover:not(:disabled) {
-  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+  background: linear-gradient(135deg, #0060AA 0%, #004D8C 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 96, 170, 0.3);
 }
 
 /* ===================================
@@ -597,7 +597,7 @@ blockquote {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #14B8A6, #20C997, #FFC107);
+  background: linear-gradient(90deg, #0060AA, #20C997, #FFC107);
   opacity: 0;
   transition: opacity 0.3s ease;
 }

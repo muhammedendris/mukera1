@@ -1,18 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
 const { isAuthenticated } = require('../middleware/auth');
 const { uploadIdCard, handleMulterError } = require('../middleware/upload');
 const { requestPasswordReset, resetPasswordWithOTP } = require('../controllers/passwordResetController');
-
-// Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
-  });
-};
+const { resendVerificationOTP, verifyEmailWithOTP } = require('../controllers/emailVerificationController');
+const { registerUser, loginUser, getCurrentUser } = require('../controllers/authController');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user (Student or Dean)
@@ -28,64 +21,17 @@ router.post(
     body('role').isIn(['student', 'dean']).withMessage('Invalid role')
   ],
   async (req, res) => {
-    try {
-      // Validate input
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          errors: errors.array()
-        });
-      }
-
-      const { email, password, fullName, role, university, department, phone, address } = req.body;
-
-      // Check if ID card was uploaded
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message: 'ID card upload is required'
-        });
-      }
-
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'User with this email already exists'
-        });
-      }
-
-      // Create new user
-      const user = new User({
-        email,
-        password,
-        fullName,
-        role,
-        university,
-        department,
-        phone,
-        address,
-        idCardPath: `/uploads/id-cards/${req.file.filename}`,
-        isVerified: false
-      });
-
-      await user.save();
-
-      res.status(201).json({
-        success: true,
-        message: 'Registration successful. Your account is pending verification.',
-        user: user.toSafeObject()
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
         success: false,
-        message: 'Server error during registration',
-        error: error.message
+        errors: errors.array()
       });
     }
+
+    // Call the controller
+    return registerUser(req, res);
   }
 );
 
@@ -103,56 +49,21 @@ router.post(
       // Validate input
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('❌ Login validation errors:', errors.array());
         return res.status(400).json({
           success: false,
           errors: errors.array()
         });
       }
 
-      const { email, password } = req.body;
-
-      // Find user with password
-      const user = await User.findOne({ email }).select('+password');
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
-
-      // Check password
-      const isPasswordCorrect = await user.comparePassword(password);
-
-      if (!isPasswordCorrect) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
-
-      // Check if dean account is verified (deans can't login until verified)
-      if (user.role === 'dean' && !user.isVerified) {
-        return res.status(403).json({
-          success: false,
-          message: 'Your account is pending verification by the Company Admin. Please wait for approval.'
-        });
-      }
-
-      // Generate token
-      const token = generateToken(user._id);
-
-      res.json({
-        success: true,
-        message: 'Login successful',
-        token,
-        user: user.toSafeObject()
-      });
+      console.log('✅ Login validation passed, calling controller...');
+      // Call the controller
+      return loginUser(req, res);
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({
+      console.error('❌ Login route error:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Server error during login',
+        message: 'Server error in login route',
         error: error.message
       });
     }
@@ -162,17 +73,48 @@ router.post(
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', isAuthenticated, getCurrentUser);
+
+// @route   POST /api/auth/debug-check-user
+// @desc    Debug endpoint to check if user exists
+// @access  Public (FOR DEBUGGING ONLY - REMOVE IN PRODUCTION)
+router.post('/debug-check-user', async (req, res) => {
   try {
-    res.json({
-      success: true,
-      user: req.user
+    const User = require('../models/User');
+    const { email } = req.body;
+
+    console.log('\n🔍 DEBUG: Checking user:', email);
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      console.log('❌ User not found');
+      return res.json({
+        exists: false,
+        message: 'User not found in database'
+      });
+    }
+
+    console.log('✅ User found:', {
+      email: user.email,
+      role: user.role,
+      isEmailVerified: user.isEmailVerified,
+      isVerified: user.isVerified
+    });
+
+    return res.json({
+      exists: true,
+      user: {
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error',
+    console.error('Debug check error:', error);
+    return res.status(500).json({
       error: error.message
     });
   }
@@ -187,5 +129,15 @@ router.post('/forgot-password', requestPasswordReset);
 // @desc    Reset password with OTP
 // @access  Public
 router.post('/reset-password', resetPasswordWithOTP);
+
+// @route   POST /api/auth/verify-email
+// @desc    Verify email with OTP
+// @access  Public
+router.post('/verify-email', verifyEmailWithOTP);
+
+// @route   POST /api/auth/resend-verification-otp
+// @desc    Resend email verification OTP
+// @access  Public
+router.post('/resend-verification-otp', resendVerificationOTP);
 
 module.exports = router;

@@ -6,6 +6,10 @@ const applicationSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  companyName: {
+    type: String,
+    trim: true
+  },
   requestedDuration: {
     type: String,
     required: [true, 'Internship duration is required'],
@@ -49,9 +53,6 @@ const applicationSchema = new mongoose.Schema({
   },
   internshipDurationWeeks: {
     type: Number,
-    required: function() {
-      return this.status === 'accepted';
-    },
     min: [1, 'Internship duration must be at least 1 week']
   },
   currentProgress: {
@@ -64,7 +65,10 @@ const applicationSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Ensure one active application per student
-applicationSchema.index({ student: 1, status: 1 });
+// Performance indexes for faster queries
+applicationSchema.index({ student: 1, status: 1 }); // Existing index
+applicationSchema.index({ status: 1, createdAt: -1 }); // For filtering by status and sorting
+applicationSchema.index({ assignedAdvisor: 1, status: 1 }); // For advisor dashboard queries
+applicationSchema.index({ student: 1 }); // For student lookups
 
 module.exports = mongoose.model('Application', applicationSchema);

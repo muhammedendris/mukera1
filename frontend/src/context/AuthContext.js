@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       return {
         success: true,
         message: response.data.message,
-        user: response.data.user
+        email: response.data.email
       };
     } catch (error) {
       return {

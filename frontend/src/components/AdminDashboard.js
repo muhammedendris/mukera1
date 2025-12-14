@@ -15,6 +15,15 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedIdCard, setSelectedIdCard] = useState(null);
 
+  // Cover Letter Modal State
+  const [showCoverLetterModal, setShowCoverLetterModal] = useState(false);
+  const [selectedCoverLetter, setSelectedCoverLetter] = useState(null);
+
+  // Rejection Modal State
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedApplicationId, setSelectedApplicationId] = useState(null);
+
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'http://localhost:5000';
@@ -55,10 +64,36 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleApplicationStatus = async (appId, status) => {
+  const handleAcceptApplication = async (appId) => {
+    if (window.confirm('Are you sure you want to accept this application?')) {
+      try {
+        await applicationsAPI.updateStatus(appId, 'accepted');
+        showMessage('Application accepted successfully. Email sent to student.');
+        loadData();
+      } catch (error) {
+        showMessage(error.response?.data?.message || 'Action failed');
+      }
+    }
+  };
+
+  const handleRejectApplication = (appId) => {
+    setSelectedApplicationId(appId);
+    setRejectionReason('');
+    setShowRejectModal(true);
+  };
+
+  const confirmRejectApplication = async () => {
+    if (!rejectionReason.trim()) {
+      showMessage('Please provide a rejection reason');
+      return;
+    }
+
     try {
-      await applicationsAPI.updateStatus(appId, status);
-      showMessage(`Application ${status} successfully`);
+      await applicationsAPI.updateStatus(selectedApplicationId, 'rejected', rejectionReason);
+      showMessage('Application rejected successfully. Email sent to student.');
+      setShowRejectModal(false);
+      setRejectionReason('');
+      setSelectedApplicationId(null);
       loadData();
     } catch (error) {
       showMessage(error.response?.data?.message || 'Action failed');
@@ -215,6 +250,7 @@ const AdminDashboard = () => {
                       <th>University</th>
                       <th>Duration</th>
                       <th>Status</th>
+                      <th>Cover Letter</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -230,18 +266,29 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                         <td>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => {
+                              setSelectedCoverLetter(app.coverLetter);
+                              setShowCoverLetterModal(true);
+                            }}
+                          >
+                            View Cover Letter
+                          </button>
+                        </td>
+                        <td>
                           {app.status === 'pending' && (
                             <>
                               <button
                                 className="btn btn-success btn-sm"
-                                onClick={() => handleApplicationStatus(app._id, 'accepted')}
+                                onClick={() => handleAcceptApplication(app._id)}
                                 style={{ marginRight: '5px' }}
                               >
                                 Accept
                               </button>
                               <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleApplicationStatus(app._id, 'rejected')}
+                                onClick={() => handleRejectApplication(app._id)}
                               >
                                 Reject
                               </button>
@@ -368,6 +415,179 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Cover Letter Modal */}
+      {showCoverLetterModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCoverLetterModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              minWidth: '500px',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#0060AA' }}>
+              Student Cover Letter
+            </h3>
+
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              padding: '20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '4px',
+              marginBottom: '20px',
+              border: '1px solid #dee2e6',
+              lineHeight: '1.6',
+              fontSize: '14px'
+            }}>
+              {selectedCoverLetter}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowCoverLetterModal(false)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowRejectModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              minWidth: '500px',
+              maxWidth: '600px'
+            }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#dc3545' }}>
+              Reject Application
+            </h3>
+
+            <p style={{ marginBottom: '15px', color: '#666' }}>
+              Please provide a reason for rejecting this application. This will be sent to the student via email.
+            </p>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                Rejection Reason *
+              </label>
+              <textarea
+                className="form-control"
+                rows="5"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Example: We regret to inform you that your application did not meet our current requirements. We encourage you to gain more experience in relevant areas and apply again in the future."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ced4da',
+                  fontSize: '14px',
+                  resize: 'vertical',
+                  minHeight: '100px'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={confirmRejectApplication}
+                disabled={!rejectionReason.trim()}
+                style={{
+                  padding: '10px 20px',
+                  background: rejectionReason.trim() ? '#dc3545' : '#cccccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: rejectionReason.trim() ? 'pointer' : 'not-allowed',
+                  fontSize: '14px'
+                }}
+              >
+                Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ID Card Modal */}
       {selectedIdCard && (

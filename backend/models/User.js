@@ -18,10 +18,11 @@ const userSchema = new mongoose.Schema({
     select: false
   },
   role: {
-    type: String,
-    enum: ['student', 'dean', 'company-admin', 'advisor'],
-    required: true
-  },
+  type: String,
+  // 'admin' የሚለውን መጨረሻ ላይ ጨምርበት
+  enum: ['student', 'dean', 'company-admin', 'advisor', 'Admin'], 
+  required: true
+},
   fullName: {
     type: String,
     required: [true, 'Full name is required'],
@@ -75,10 +76,28 @@ const userSchema = new mongoose.Schema({
   resetPasswordOTPExpires: {
     type: Date,
     select: false
+  },
+  // Email Verification OTP Fields
+  emailVerificationOTP: {
+    type: String,
+    select: false
+  },
+  emailVerificationOTPExpires: {
+    type: Date,
+    select: false
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
 });
+
+// Performance indexes for faster queries
+userSchema.index({ email: 1 }); // For login and email lookups
+userSchema.index({ role: 1, isVerified: 1 }); // For role-based queries
+userSchema.index({ university: 1, department: 1 }); // For dean queries
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
@@ -127,6 +146,24 @@ userSchema.methods.generatePasswordResetOTP = function() {
 userSchema.methods.clearPasswordResetOTP = function() {
   this.resetPasswordOTP = undefined;
   this.resetPasswordOTPExpires = undefined;
+};
+
+// Generate Email Verification OTP
+userSchema.methods.generateEmailVerificationOTP = function() {
+  // Generate random 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Set OTP and expiration (10 minutes from now)
+  this.emailVerificationOTP = otp;
+  this.emailVerificationOTPExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  return otp;
+};
+
+// Clear Email Verification OTP
+userSchema.methods.clearEmailVerificationOTP = function() {
+  this.emailVerificationOTP = undefined;
+  this.emailVerificationOTPExpires = undefined;
 };
 
 module.exports = mongoose.model('User', userSchema);

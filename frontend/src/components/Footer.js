@@ -11,7 +11,14 @@ const Footer = () => {
         <div className="footer-content">
           {/* Brand/Logo Section */}
           <div className="footer-brand">
-            <h3 className="footer-logo">Internship Portal</h3>
+            <div className="footer-logo-wrapper">
+              <img
+                src="/favicon.jpg"
+                alt="AiT Logo"
+                className="footer-logo-image"
+              />
+              <h3 className="footer-logo">Internship Portal</h3>
+            </div>
             <p className="footer-tagline">
               Connecting students with their future careers
             </p>

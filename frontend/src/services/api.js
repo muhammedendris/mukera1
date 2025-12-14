@@ -33,7 +33,9 @@ export const authAPI = {
   getCurrentUser: () => api.get('/auth/me'),
   requestPasswordReset: (email) => api.post('/auth/forgot-password', { email }),
   resetPasswordWithOTP: (email, otp, newPassword) =>
-    api.post('/auth/reset-password', { email, otp, newPassword })
+    api.post('/auth/reset-password', { email, otp, newPassword }),
+  verifyEmail: (email, otp) => api.post('/auth/verify-email', { email, otp }),
+  resendVerificationOTP: (email) => api.post('/auth/resend-verification-otp', { email })
 };
 
 // Users API
@@ -49,8 +51,14 @@ export const applicationsAPI = {
   submit: (applicationData) => api.post('/applications', applicationData),
   getAll: () => api.get('/applications'),
   getById: (id) => api.get(`/applications/${id}`),
-  updateStatus: (id, status, rejectionReason) =>
-    api.patch(`/applications/${id}/status`, { status, rejectionReason }),
+  updateStatus: (id, status, rejectionReason = null) => {
+    const payload = { status };
+    // Only include rejectionReason if status is rejected and reason is provided
+    if (status === 'rejected' && rejectionReason) {
+      payload.rejectionReason = rejectionReason;
+    }
+    return api.patch(`/applications/${id}/status`, payload);
+  },
   assignAdvisor: (id, advisorId) =>
     api.patch(`/applications/${id}/assign-advisor`, { advisorId })
 };
@@ -68,7 +76,8 @@ export const advisorsAPI = {
 export const chatsAPI = {
   send: (messageData) => api.post('/chats', messageData),
   getHistory: (applicationId) => api.get(`/chats/${applicationId}`),
-  getUnreadCount: () => api.get('/chats/unread/count')
+  getUnreadCount: () => api.get('/chats/unread/count'),
+  clear: (applicationId) => api.delete(`/chats/${applicationId}`)
 };
 
 // Evaluations API

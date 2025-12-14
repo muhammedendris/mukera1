@@ -46,7 +46,8 @@ router.post(
         role: 'advisor',
         phone,
         address,
-        isVerified: true, // Advisors are auto-verified
+        isVerified: true, // Advisors are auto-verified by admin
+        isEmailVerified: true, // Skip email verification since admin created this account
         createdBy: req.user._id
       });
 

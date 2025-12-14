@@ -217,12 +217,32 @@ const StudentDashboard = () => {
         />
 
         {/* Chat Section */}
-        {application.assignedAdvisor && (
-          <div className="card">
-            <h3>Chat with Advisor</h3>
-            <Chat applicationId={application._id} />
-          </div>
-        )}
+        <div className="card">
+          <h3>
+            {application.assignedAdvisor
+              ? 'Chat with Advisor'
+              : 'Messages (Advisor Not Yet Assigned)'}
+          </h3>
+
+          {!application.assignedAdvisor && (
+            <div className="alert alert-info mb-2" style={{
+              background: '#e7f3ff',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: '1px solid #b3d9ff'
+            }}>
+              <strong>📝 Note:</strong> You can start preparing your questions here.
+              Once an advisor is assigned, they will receive all your messages.
+            </div>
+          )}
+
+          <Chat
+            applicationId={application._id}
+            hasAdvisor={!!application.assignedAdvisor}
+            advisorInfo={application.assignedAdvisor}
+          />
+        </div>
 
         {/* Report Upload Section */}
         <div className="card">

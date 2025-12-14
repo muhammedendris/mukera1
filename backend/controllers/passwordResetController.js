@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { sendPasswordResetOTP } = require('../services/emailService');
+const { sendPasswordResetOTP } = require('../utils/sendEmail');
 
 // @desc    Request password reset OTP
 // @route   POST /api/auth/forgot-password

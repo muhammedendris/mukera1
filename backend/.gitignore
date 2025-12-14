@@ -3,3 +3,11 @@ node_modules/
 uploads/
 *.log
 .DS_Store
+
+# Development and test files
+*.backup
+test-*.html
+extract-*.html
+checkUserDetails.js
+forceAdmin.js
+listUsers.js

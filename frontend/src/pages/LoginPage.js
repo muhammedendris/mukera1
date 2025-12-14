@@ -9,6 +9,10 @@ const LoginPage = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
@@ -20,10 +24,44 @@ const LoginPage = () => {
       [e.target.name]: e.target.value
     });
     setError('');
+    // Clear field error when user starts typing
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors({
+        ...fieldErrors,
+        [e.target.name]: ''
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    if (!formData.password.trim()) {
+      errors.password = 'Password is required';
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form first
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setError('');
 

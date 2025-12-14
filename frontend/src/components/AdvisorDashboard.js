@@ -135,7 +135,11 @@ const AdvisorDashboard = () => {
                 {/* Chat */}
                 <div className="card mt-2">
                   <h3>Chat with Student</h3>
-                  <Chat applicationId={selectedStudent._id} />
+                  <Chat
+                    applicationId={selectedStudent._id}
+                    hasAdvisor={true}
+                    advisorInfo={user}
+                  />
                 </div>
 
                 {/* Reports */}

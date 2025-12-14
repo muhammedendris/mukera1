@@ -170,16 +170,61 @@ const PersonalInfoForm = ({ user, onSave, onCancel }) => {
                 <label className="block text-sm font-medium text-black mb-2">
                   University <span className="text-error">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   {...register('university')}
-                  className={`w-full h-12 px-4 border rounded-lg text-base transition-all duration-200 ${
+                  className={`w-full h-12 px-4 border rounded-lg text-base transition-all duration-200 bg-white cursor-pointer ${
                     errors.university
                       ? 'border-error focus:border-error focus:ring-2 focus:ring-error focus:ring-opacity-20'
                       : 'border-gray-200 focus:border-blue-accent focus:ring-2 focus:ring-blue-accent focus:ring-opacity-20'
                   } outline-none`}
-                  placeholder="e.g., Massachusetts Institute of Technology"
-                />
+                >
+                  <option value="">Select your university</option>
+                  <option value="Addis Ababa University">Addis Ababa University</option>
+                  <option value="Jimma University">Jimma University</option>
+                  <option value="Gondar University">Gondar University</option>
+                  <option value="Haramaya University">Haramaya University</option>
+                  <option value="Bahir Dar University">Bahir Dar University</option>
+                  <option value="Hawassa University">Hawassa University</option>
+                  <option value="Mekelle University">Mekelle University</option>
+                  <option value="Arba Minch University">Arba Minch University</option>
+                  <option value="Adama Science and Technology University">Adama Science and Technology University</option>
+                  <option value="Dire Dawa University">Dire Dawa University</option>
+                  <option value="Wollo University">Wollo University</option>
+                  <option value="Debre Markos University">Debre Markos University</option>
+                  <option value="Debre Berhan University">Debre Berhan University</option>
+                  <option value="Wolkite University">Wolkite University</option>
+                  <option value="Wolaita Sodo University">Wolaita Sodo University</option>
+                  <option value="Mizan-Tepi University">Mizan-Tepi University</option>
+                  <option value="Bule Hora University">Bule Hora University</option>
+                  <option value="Dilla University">Dilla University</option>
+                  <option value="Wachemo University">Wachemo University</option>
+                  <option value="Woldia University">Woldia University</option>
+                  <option value="Adigrat University">Adigrat University</option>
+                  <option value="Aksum University">Aksum University</option>
+                  <option value="Madda Walabu University">Madda Walabu University</option>
+                  <option value="Mettu University">Mettu University</option>
+                  <option value="Assosa University">Assosa University</option>
+                  <option value="Semera University">Semera University</option>
+                  <option value="Jigjiga University">Jigjiga University</option>
+                  <option value="Gambella University">Gambella University</option>
+                  <option value="Samara University">Samara University</option>
+                  <option value="Jinka University">Jinka University</option>
+                  <option value="Ambo University">Ambo University</option>
+                  <option value="Raya University">Raya University</option>
+                  <option value="Injibara University">Injibara University</option>
+                  <option value="Debark University">Debark University</option>
+                  <option value="Debre Tabor University">Debre Tabor University</option>
+                  <option value="Bonga University">Bonga University</option>
+                  <option value="Dembi Dollo University">Dembi Dollo University</option>
+                  <option value="Oda Bultum University">Oda Bultum University</option>
+                  <option value="Salale University">Salale University</option>
+                  <option value="Kebri Dehar University">Kebri Dehar University</option>
+                  <option value="Mekdela Amba University">Mekdela Amba University</option>
+                  <option value="Ethiopian Civil Service University">Ethiopian Civil Service University</option>
+                  <option value="Defense University College">Defense University College</option>
+                  <option value="Kotebe Metropolitan University">Kotebe Metropolitan University</option>
+                  <option value="Other">Other</option>
+                </select>
                 {errors.university && (
                   <p className="mt-2 text-sm text-error flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />

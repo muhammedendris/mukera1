@@ -51,20 +51,19 @@ const ApplicationForm = ({ onSuccess }) => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="requestedDuration">Requested Internship Duration *</label>
-          <select
+          <input
+            type="text"
             id="requestedDuration"
             name="requestedDuration"
             className="form-control"
             value={formData.requestedDuration}
             onChange={handleChange}
+            placeholder="e.g., 3 Months, 6 Weeks, 2 Months"
             required
-          >
-            <option value="">Select duration</option>
-            <option value="1 Month">1 Month</option>
-            <option value="2 Months">2 Months</option>
-            <option value="3 Months">3 Months</option>
-            <option value="6 Months">6 Months</option>
-          </select>
+          />
+          <small className="form-text">
+            Enter your preferred internship duration (e.g., "3 Months")
+          </small>
         </div>
 
         <div className="form-group">

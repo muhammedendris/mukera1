@@ -1,0 +1,10 @@
+# Claude Code settings
+.claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Development and test files
+nul
+test-*.html
+extract-*.html
