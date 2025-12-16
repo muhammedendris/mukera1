@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { chatsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import io from 'socket.io-client';
+import './Chat.css';
 
 const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null }) => {
   const [messages, setMessages] = useState([]);
@@ -174,28 +175,18 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
   }, [applicationId]);
 
   if (loading) {
-    return <div>Loading chat...</div>;
+    return <div className="telegram-loading">Loading chat...</div>;
   }
 
   return (
-    <div className="chat-container" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      {/* Chat Header */}
-      <div style={{
-        background: hasAdvisor
-          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          : 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '12px 12px 0 0',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <h3 style={{ margin: 0 }}>
+    <div className="telegram-chat-container">
+      {/* Chat Header - Telegram Style */}
+      <div className={`telegram-chat-header ${!hasAdvisor ? 'no-advisor' : ''}`}>
+        <div className="telegram-header-info">
+          <h3>
             {hasAdvisor ? 'Chat Messages' : 'Prepare Your Questions'}
           </h3>
-          <span style={{ fontSize: '12px', opacity: 0.9 }}>
+          <span>
             {hasAdvisor
               ? `🟢 Advisor: ${advisorInfo?.fullName || 'Online'}`
               : '⏳ Waiting for advisor assignment'}
@@ -203,52 +194,21 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
         </div>
         <button
           onClick={handleClearChat}
-          style={{
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: '2px solid white',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.backgroundColor = '#c82333';
-            e.target.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.backgroundColor = '#dc3545';
-            e.target.style.transform = 'translateY(0)';
-          }}
+          className="telegram-clear-btn"
           title="Clear all messages"
         >
-          🗑️ Clear Chat
+          🗑️ Clear
         </button>
       </div>
 
-      {/* Messages Area */}
-      <div className="chat-messages" style={{
-        background: 'white',
-        padding: '20px',
-        maxHeight: '500px',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        minHeight: '300px',
-        position: 'relative'
-      }}>
+      {/* Messages Area - Telegram Beige Background */}
+      <div className="telegram-messages-area">
         {messages.length === 0 ? (
-          <p className="text-center" style={{
-            color: '#999',
-            padding: '50px',
-            textAlign: 'center'
-          }}>
+          <div className="telegram-empty-state">
             {hasAdvisor
               ? 'No messages yet. Start a conversation!'
               : 'No messages yet. Start preparing your questions for when an advisor is assigned!'}
-          </p>
+          </div>
         ) : (
           messages.map((msg) => {
             const isOwnMessage = msg.sender._id === user._id;
@@ -257,52 +217,22 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
             return (
               <div
                 key={msg._id}
-                className={`chat-message ${
-                  isOwnMessage ? 'message-sent' : 'message-received'
-                }`}
-                style={{
-                  display: 'flex',
-                  justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
-                  marginBottom: '15px'
-                }}
+                className={`telegram-message-wrapper ${isOwnMessage ? 'sent' : 'received'}`}
               >
-                <div style={{
-                  maxWidth: '70%',
-                  padding: '12px 16px',
-                  borderRadius: '18px',
-                  background: isOwnMessage
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    : '#e9ecef',
-                  color: isOwnMessage ? 'white' : '#333',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
-                  position: 'relative'
-                }}>
+                <div className={`telegram-message-bubble ${isOwnMessage ? 'sent' : 'received'}`}>
                   {/* Sender Name */}
-                  <div className="message-sender" style={{
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    marginBottom: '4px',
-                    opacity: isOwnMessage ? 0.9 : 1,
-                    color: isOwnMessage ? 'white' : '#667eea'
-                  }}>
+                  <div className="telegram-sender-name">
                     {msg.sender.fullName}
                   </div>
 
-                  {/* Message Content or Edit Input */}
+                  {/* Message Content or Edit Mode */}
                   {isEditing ? (
-                    <div>
+                    <div className="telegram-edit-container">
                       <input
                         type="text"
+                        className="telegram-edit-input"
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          border: '2px solid #667eea',
-                          borderRadius: '8px',
-                          fontSize: '15px',
-                          marginBottom: '8px'
-                        }}
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {
                             handleSaveEdit(msg._id);
@@ -310,32 +240,16 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
                         }}
                         autoFocus
                       />
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div className="telegram-edit-actions">
                         <button
                           onClick={() => handleSaveEdit(msg._id)}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px'
-                          }}
+                          className="telegram-edit-save"
                         >
                           ✓ Save
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#6c757d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px'
-                          }}
+                          className="telegram-edit-cancel"
                         >
                           ✕ Cancel
                         </button>
@@ -343,76 +257,44 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
                     </div>
                   ) : (
                     <>
-                      <div className="message-content" style={{
-                        fontSize: '15px',
-                        lineHeight: '1.5',
-                        wordWrap: 'break-word'
-                      }}>
+                      {/* Message Text */}
+                      <div className="telegram-message-content">
                         {msg.message}
                       </div>
 
-                      {/* Message Time and Edited Badge */}
-                      <div className="message-time" style={{
-                        fontSize: '11px',
-                        marginTop: '4px',
-                        opacity: 0.8,
-                        display: 'flex',
-                        gap: '8px',
-                        alignItems: 'center'
-                      }}>
-                        <span>{new Date(msg.timestamp).toLocaleString()}</span>
+                      {/* Footer: Time + Actions */}
+                      <div className="telegram-message-footer">
+                        <span className="telegram-timestamp">
+                          {new Date(msg.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+
                         {msg.isEdited && (
-                          <span style={{
-                            fontSize: '10px',
-                            fontStyle: 'italic',
-                            opacity: 0.7
-                          }}>
-                            (edited)
-                          </span>
+                          <span className="telegram-edited-badge">edited</span>
+                        )}
+
+                        {/* Edit/Delete Icons (Shown on Hover - Only for Own Messages) */}
+                        {isOwnMessage && (
+                          <div className="telegram-message-actions">
+                            <button
+                              onClick={() => handleEditMessage(msg._id, msg.message)}
+                              className="telegram-icon-btn edit-btn"
+                              title="Edit message"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(msg._id)}
+                              className="telegram-icon-btn delete-btn"
+                              title="Delete message"
+                            >
+                              🗑
+                            </button>
+                          </div>
                         )}
                       </div>
-
-                      {/* Edit/Delete Buttons (Only for Own Messages) */}
-                      {isOwnMessage && (
-                        <div style={{
-                          marginTop: '8px',
-                          display: 'flex',
-                          gap: '8px'
-                        }}>
-                          <button
-                            onClick={() => handleEditMessage(msg._id, msg.message)}
-                            style={{
-                              padding: '4px 10px',
-                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                              color: 'white',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '500'
-                            }}
-                            title="Edit message"
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMessage(msg._id)}
-                            style={{
-                              padding: '4px 10px',
-                              backgroundColor: 'rgba(220, 53, 69, 0.9)',
-                              color: 'white',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '500'
-                            }}
-                            title="Delete message"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      )}
                     </>
                   )}
                 </div>
@@ -423,45 +305,23 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input Form */}
-      <form onSubmit={handleSubmit} className="chat-form" style={{
-        display: 'flex',
-        gap: '12px',
-        padding: '16px 20px',
-        background: 'white',
-        borderTop: '1px solid #e5e7eb',
-        borderRadius: '0 0 12px 12px'
-      }}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Type your message..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            border: '2px solid #e5e7eb',
-            borderRadius: '24px',
-            fontSize: '15px',
-            outline: 'none'
-          }}
-        />
+      {/* Input Area - Fixed at Bottom */}
+      <form onSubmit={handleSubmit} className="telegram-input-area">
+        <div className="telegram-input-wrapper">
+          <input
+            type="text"
+            className="telegram-input"
+            placeholder="Type your message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+          />
+        </div>
         <button
           type="submit"
-          className="btn btn-primary"
-          style={{
-            padding: '12px 28px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '24px',
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
+          className="telegram-send-btn"
+          title="Send message"
         >
-          Send
+          <span className="telegram-send-icon">✈</span>
         </button>
       </form>
     </div>
