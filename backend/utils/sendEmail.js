@@ -16,7 +16,9 @@ const createTransporter = () => {
   console.log('📧 Creating email transporter with Gmail...');
 
   const transporter = nodemailer.createTransport({
-    service: EMAIL_CONFIG.service,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use TLS
     auth: {
       user: EMAIL_CONFIG.user,
       pass: EMAIL_CONFIG.password,
