@@ -1,33 +1,45 @@
-const nodemailer = require('nodemailer');
+const brevo = require('@getbrevo/brevo');
 
 // ============================================
-// EMAIL CONFIGURATION (Using Environment Variables)
+// EMAIL CONFIGURATION (Using Brevo API)
 // ============================================
 const EMAIL_CONFIG = {
-  user: process.env.EMAIL_USER,
-  password: process.env.EMAIL_PASSWORD,
+  apiKey: process.env.BREVO_API_KEY,
   fromName: process.env.EMAIL_FROM_NAME || 'Internship System',
-  fromEmail: process.env.EMAIL_FROM || process.env.EMAIL_USER
+  fromEmail: process.env.EMAIL_FROM || 'muhammedendris565@gmail.com'
 };
 
-// Create reusable transporter with environment variables
-const createTransporter = () => {
-  console.log('📧 Creating email transporter with Brevo...');
-  console.log('📧 Email User:', EMAIL_CONFIG.user);
-  console.log('📧 Email configured:', EMAIL_CONFIG.user ? 'Yes' : 'No');
+// Initialize Brevo API client
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, EMAIL_CONFIG.apiKey);
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false, // Use TLS
-    auth: {
-      user: EMAIL_CONFIG.user,
-      pass: EMAIL_CONFIG.password,
-    },
-  });
+/**
+ * Send Email using Brevo API
+ * @param {Object} emailData - Email data
+ * @returns {Promise<Object>} - Success status
+ */
+const sendEmailViaBrevo = async (emailData) => {
+  const sendSmtpEmail = new brevo.SendSmtpEmail();
 
-  console.log('✅ Email transporter created successfully');
-  return transporter;
+  sendSmtpEmail.sender = {
+    name: EMAIL_CONFIG.fromName,
+    email: EMAIL_CONFIG.fromEmail
+  };
+  sendSmtpEmail.to = [{ email: emailData.to, name: emailData.toName || emailData.to }];
+  sendSmtpEmail.subject = emailData.subject;
+  sendSmtpEmail.htmlContent = emailData.html;
+  sendSmtpEmail.textContent = emailData.text;
+
+  try {
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    return {
+      success: true,
+      messageId: response.messageId
+    };
+  } catch (error) {
+    console.error('Brevo API Error:', error);
+    throw new Error(`Failed to send email via Brevo: ${error.message}`);
+  }
 };
 
 /**
@@ -39,7 +51,7 @@ const createTransporter = () => {
  */
 const sendRegistrationOTP = async (email, otp, fullName) => {
   console.log('\n========================================');
-  console.log('📨 SENDING REGISTRATION OTP EMAIL');
+  console.log('📨 SENDING REGISTRATION OTP EMAIL VIA BREVO API');
   console.log('========================================');
   console.log(`To: ${email}`);
   console.log(`OTP: ${otp}`);
@@ -47,11 +59,9 @@ const sendRegistrationOTP = async (email, otp, fullName) => {
   console.log('========================================\n');
 
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
+    const emailData = {
       to: email,
+      toName: fullName,
       subject: 'Welcome! Verify Your Email - Internship Management System',
       html: `
         <!DOCTYPE html>
@@ -184,29 +194,22 @@ const sendRegistrationOTP = async (email, otp, fullName) => {
       `
     };
 
-    console.log('📤 Sending email...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log('📤 Sending email via Brevo API...');
+    const result = await sendEmailViaBrevo(emailData);
 
     console.log('\n========================================');
-    console.log('✅ EMAIL SENT SUCCESSFULLY!');
+    console.log('✅ EMAIL SENT SUCCESSFULLY VIA BREVO API!');
     console.log('========================================');
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Response: ${info.response}`);
+    console.log(`Message ID: ${result.messageId}`);
     console.log('========================================\n');
 
-    return {
-      success: true,
-      messageId: info.messageId,
-      response: info.response
-    };
+    return result;
   } catch (error) {
     console.error('\n========================================');
     console.error('❌ EMAIL SENDING FAILED!');
     console.error('========================================');
     console.error('Error Name:', error.name);
     console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    console.error('Error Details:', error);
     console.error('========================================\n');
 
     throw new Error(`Failed to send verification email: ${error.message}`);
@@ -222,7 +225,7 @@ const sendRegistrationOTP = async (email, otp, fullName) => {
  */
 const sendPasswordResetOTP = async (email, otp, fullName) => {
   console.log('\n========================================');
-  console.log('📨 SENDING PASSWORD RESET OTP EMAIL');
+  console.log('📨 SENDING PASSWORD RESET OTP EMAIL VIA BREVO API');
   console.log('========================================');
   console.log(`To: ${email}`);
   console.log(`OTP: ${otp}`);
@@ -230,11 +233,9 @@ const sendPasswordResetOTP = async (email, otp, fullName) => {
   console.log('========================================\n');
 
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
+    const emailData = {
       to: email,
+      toName: fullName,
       subject: 'Password Reset - OTP Code',
       html: `
         <!DOCTYPE html>
@@ -367,29 +368,22 @@ const sendPasswordResetOTP = async (email, otp, fullName) => {
       `
     };
 
-    console.log('📤 Sending password reset email...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log('📤 Sending password reset email via Brevo API...');
+    const result = await sendEmailViaBrevo(emailData);
 
     console.log('\n========================================');
-    console.log('✅ PASSWORD RESET EMAIL SENT SUCCESSFULLY!');
+    console.log('✅ PASSWORD RESET EMAIL SENT SUCCESSFULLY VIA BREVO API!');
     console.log('========================================');
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Response: ${info.response}`);
+    console.log(`Message ID: ${result.messageId}`);
     console.log('========================================\n');
 
-    return {
-      success: true,
-      messageId: info.messageId,
-      response: info.response
-    };
+    return result;
   } catch (error) {
     console.error('\n========================================');
     console.error('❌ PASSWORD RESET EMAIL SENDING FAILED!');
     console.error('========================================');
     console.error('Error Name:', error.name);
     console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    console.error('Error Details:', error);
     console.error('========================================\n');
 
     throw new Error(`Failed to send password reset email: ${error.message}`);
@@ -405,7 +399,7 @@ const sendPasswordResetOTP = async (email, otp, fullName) => {
  */
 const sendApplicationAcceptedEmail = async (email, fullName, internshipDurationWeeks) => {
   console.log('\n========================================');
-  console.log('📨 SENDING APPLICATION ACCEPTED EMAIL');
+  console.log('📨 SENDING APPLICATION ACCEPTED EMAIL VIA BREVO API');
   console.log('========================================');
   console.log(`To: ${email}`);
   console.log(`Full Name: ${fullName}`);
@@ -413,11 +407,9 @@ const sendApplicationAcceptedEmail = async (email, fullName, internshipDurationW
   console.log('========================================\n');
 
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
+    const emailData = {
       to: email,
+      toName: fullName,
       subject: '🎉 Congratulations! Your Internship Application Has Been Accepted',
       html: `
         <!DOCTYPE html>
@@ -578,29 +570,22 @@ const sendApplicationAcceptedEmail = async (email, fullName, internshipDurationW
       `
     };
 
-    console.log('📤 Sending acceptance email...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log('📤 Sending acceptance email via Brevo API...');
+    const result = await sendEmailViaBrevo(emailData);
 
     console.log('\n========================================');
-    console.log('✅ ACCEPTANCE EMAIL SENT SUCCESSFULLY!');
+    console.log('✅ ACCEPTANCE EMAIL SENT SUCCESSFULLY VIA BREVO API!');
     console.log('========================================');
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Response: ${info.response}`);
+    console.log(`Message ID: ${result.messageId}`);
     console.log('========================================\n');
 
-    return {
-      success: true,
-      messageId: info.messageId,
-      response: info.response
-    };
+    return result;
   } catch (error) {
     console.error('\n========================================');
     console.error('❌ ACCEPTANCE EMAIL SENDING FAILED!');
     console.error('========================================');
     console.error('Error Name:', error.name);
     console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    console.error('Error Details:', error);
     console.error('========================================\n');
 
     throw new Error(`Failed to send acceptance email: ${error.message}`);
@@ -616,7 +601,7 @@ const sendApplicationAcceptedEmail = async (email, fullName, internshipDurationW
  */
 const sendApplicationRejectedEmail = async (email, fullName, rejectionReason) => {
   console.log('\n========================================');
-  console.log('📨 SENDING APPLICATION REJECTED EMAIL');
+  console.log('📨 SENDING APPLICATION REJECTED EMAIL VIA BREVO API');
   console.log('========================================');
   console.log(`To: ${email}`);
   console.log(`Full Name: ${fullName}`);
@@ -624,11 +609,9 @@ const sendApplicationRejectedEmail = async (email, fullName, rejectionReason) =>
   console.log('========================================\n');
 
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
+    const emailData = {
       to: email,
+      toName: fullName,
       subject: 'Application Status Update - Internship Management System',
       html: `
         <!DOCTYPE html>
@@ -785,29 +768,22 @@ const sendApplicationRejectedEmail = async (email, fullName, rejectionReason) =>
       `
     };
 
-    console.log('📤 Sending rejection email...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log('📤 Sending rejection email via Brevo API...');
+    const result = await sendEmailViaBrevo(emailData);
 
     console.log('\n========================================');
-    console.log('✅ REJECTION EMAIL SENT SUCCESSFULLY!');
+    console.log('✅ REJECTION EMAIL SENT SUCCESSFULLY VIA BREVO API!');
     console.log('========================================');
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Response: ${info.response}`);
+    console.log(`Message ID: ${result.messageId}`);
     console.log('========================================\n');
 
-    return {
-      success: true,
-      messageId: info.messageId,
-      response: info.response
-    };
+    return result;
   } catch (error) {
     console.error('\n========================================');
     console.error('❌ REJECTION EMAIL SENDING FAILED!');
     console.error('========================================');
     console.error('Error Name:', error.name);
     console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    console.error('Error Details:', error);
     console.error('========================================\n');
 
     throw new Error(`Failed to send rejection email: ${error.message}`);
@@ -827,7 +803,7 @@ const sendContactEmail = async (contactData) => {
   const { name, email, phone, message } = contactData;
 
   console.log('\n========================================');
-  console.log('📨 SENDING CONTACT FORM EMAIL TO ADMIN');
+  console.log('📨 SENDING CONTACT FORM EMAIL TO ADMIN VIA BREVO API');
   console.log('========================================');
   console.log(`From: ${name} <${email}>`);
   console.log(`Phone: ${phone}`);
@@ -835,12 +811,9 @@ const sendContactEmail = async (contactData) => {
   console.log('========================================\n');
 
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
-      to: EMAIL_CONFIG.user, // Send to admin email (your email)
-      replyTo: email, // Allow admin to reply directly to the sender
+    const emailData = {
+      to: EMAIL_CONFIG.fromEmail,
+      toName: 'Admin',
       subject: `New Contact Form Submission from ${name}`,
       html: `
         <!DOCTYPE html>
@@ -919,16 +892,6 @@ const sendContactEmail = async (contactData) => {
               line-height: 1.8;
               white-space: pre-wrap;
             }
-            .reply-button {
-              display: inline-block;
-              padding: 12px 30px;
-              background: linear-gradient(135deg, #0060AA 0%, #004D8C 100%);
-              color: white;
-              text-decoration: none;
-              border-radius: 5px;
-              margin: 20px 0;
-              font-weight: bold;
-            }
             .footer {
               text-align: center;
               padding-top: 20px;
@@ -974,12 +937,8 @@ const sendContactEmail = async (contactData) => {
                 <div class="message-content">${message}</div>
               </div>
 
-              <div style="text-align: center; margin-top: 30px;">
-                <a href="mailto:${email}" class="reply-button">Reply to ${name}</a>
-              </div>
-
               <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                <strong>Tip:</strong> Click the email address or "Reply" button above to respond directly to the sender.
+                <strong>Tip:</strong> Reply to ${email} to respond directly to the sender.
               </p>
             </div>
 
@@ -1006,36 +965,29 @@ const sendContactEmail = async (contactData) => {
         ${message}
 
         ========================================
-        Reply to this email to respond to the sender.
+        Reply to ${email} to respond to the sender.
         Received on: ${new Date().toLocaleString()}
 
         © ${new Date().getFullYear()} Internship Management System
       `
     };
 
-    console.log('📤 Sending contact form email to admin...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log('📤 Sending contact form email to admin via Brevo API...');
+    const result = await sendEmailViaBrevo(emailData);
 
     console.log('\n========================================');
-    console.log('✅ CONTACT EMAIL SENT TO ADMIN SUCCESSFULLY!');
+    console.log('✅ CONTACT EMAIL SENT TO ADMIN SUCCESSFULLY VIA BREVO API!');
     console.log('========================================');
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Response: ${info.response}`);
+    console.log(`Message ID: ${result.messageId}`);
     console.log('========================================\n');
 
-    return {
-      success: true,
-      messageId: info.messageId,
-      response: info.response
-    };
+    return result;
   } catch (error) {
     console.error('\n========================================');
     console.error('❌ CONTACT EMAIL SENDING FAILED!');
     console.error('========================================');
     console.error('Error Name:', error.name);
     console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    console.error('Error Details:', error);
     console.error('========================================\n');
 
     throw new Error(`Failed to send contact email: ${error.message}`);
