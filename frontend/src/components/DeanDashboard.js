@@ -65,10 +65,6 @@ const DeanDashboard = () => {
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
 
-  // Mock data for acceptance letter verifications
-  // TODO: Replace with API call to GET /api/acceptance-letters/pending
-  const mockPendingAcceptance = [];
-
   useEffect(() => {
     loadPendingStudents();
     loadVerifiedStudentsWithEvaluations();
@@ -162,20 +158,22 @@ const DeanDashboard = () => {
   };
 
   // Handle approval with confirmation
-  const handleApprove = (studentId, studentName) => {
+  const handleApprove = async (studentId, studentName) => {
     const confirmed = window.confirm(
-      `Are you sure you want to APPROVE the acceptance letter for ${studentName}?\n\n` +
-      `This will mark the student as verified and allow them to proceed with their internship.`
+      `Are you sure you want to APPROVE ${studentName}?\n\n` +
+      `This will mark the student as verified.`
     );
 
     if (confirmed) {
-      // TODO: Replace with API call
-      // await acceptanceAPI.approve(studentId);
-
-      setMessage(`✅ Acceptance letter approved for ${studentName}`);
-      // Remove from pending list
-      setPendingStudents(prev => prev.filter(s => s._id !== studentId));
-      setTimeout(() => setMessage(''), 3000);
+      try {
+        await usersAPI.verifyUser(studentId, 'approve');
+        setMessage(`✅ Student approved: ${studentName}`);
+        loadPendingStudents(); // Reload the list
+        setTimeout(() => setMessage(''), 3000);
+      } catch (error) {
+        setMessage(error.response?.data?.message || 'Failed to approve student');
+        setTimeout(() => setMessage(''), 5000);
+      }
     }
   };
 
@@ -186,7 +184,7 @@ const DeanDashboard = () => {
   };
 
   // Handle rejection submission
-  const handleRejectSubmit = () => {
+  const handleRejectSubmit = async () => {
     if (!rejectionReason.trim()) {
       alert('Please provide a reason for rejection');
       return;
@@ -194,17 +192,19 @@ const DeanDashboard = () => {
 
     const student = selectedStudentForRejection;
 
-    // TODO: Replace with API call
-    // await acceptanceAPI.reject(student._id, { reason: rejectionReason });
+    try {
+      await usersAPI.verifyUser(student._id, 'reject');
+      setMessage(`❌ Student rejected: ${student.fullName} - Reason: ${rejectionReason}`);
+      loadPendingStudents(); // Reload the list
 
-    setMessage(`❌ Acceptance letter rejected for ${student.fullName}`);
-    setPendingStudents(prev => prev.filter(s => s._id !== student._id));
-
-    // Clean up
-    setShowRejectionModal(false);
-    setRejectionReason('');
-    setSelectedStudentForRejection(null);
-    setTimeout(() => setMessage(''), 3000);
+      // Clean up
+      setShowRejectionModal(false);
+      setRejectionReason('');
+      setSelectedStudentForRejection(null);
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      alert('Failed to reject student: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   // Handle cancel rejection modal
@@ -334,7 +334,7 @@ const DeanDashboard = () => {
               fontSize: '16px'
             }}
           >
-            Pending Verifications ({mockPendingAcceptance.length})
+            Pending Verifications ({pendingStudents.length})
           </button>
           <button
             onClick={() => setActiveTab('accepted')}
@@ -394,9 +394,9 @@ const DeanDashboard = () => {
             </div>
 
             {/* Table Content */}
-            {filterStudents(mockPendingAcceptance).length === 0 ? (
+            {filterStudents(pendingStudents).length === 0 ? (
               <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
-                <p>{searchQuery.trim() ? 'No students match your search.' : 'No pending acceptance letters to verify.'}</p>
+                <p>{searchQuery.trim() ? 'No students match your search.' : 'No pending students to verify.'}</p>
               </div>
             ) : (
               <div className="table-responsive">
@@ -405,13 +405,14 @@ const DeanDashboard = () => {
                     <tr>
                       <th>Student</th>
                       <th>GPA</th>
-                      <th>Submitted Date</th>
-                      <th>Letter</th>
+                      <th>University</th>
+                      <th>Department</th>
+                      <th>Registration Date</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filterStudents(mockPendingAcceptance).map((student) => (
+                    {filterStudents(pendingStudents).map((student) => (
                       <tr key={student._id}>
                         {/* Student Column with Avatar */}
                         <td>
@@ -439,23 +440,18 @@ const DeanDashboard = () => {
                             background: student.gpa >= 3.5 ? '#D4EDDA' : '#CCE0F5',
                             color: student.gpa >= 3.5 ? '#155724' : '#004D8C'
                           }}>
-                            {student.gpa.toFixed(2)}
+                            {student.gpa ? student.gpa.toFixed(2) : 'N/A'}
                           </span>
                         </td>
 
-                        {/* Submitted Date */}
-                        <td>{new Date(student.submittedDate).toLocaleDateString()}</td>
+                        {/* University */}
+                        <td>{student.university || 'N/A'}</td>
 
-                        {/* Letter Column */}
-                        <td>
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() => handleViewLetter(student.acceptanceLetterUrl)}
-                            title="View acceptance letter"
-                          >
-                            📄 View Letter
-                          </button>
-                        </td>
+                        {/* Department */}
+                        <td>{student.department || 'N/A'}</td>
+
+                        {/* Registration Date */}
+                        <td>{new Date(student.createdAt).toLocaleDateString()}</td>
 
                         {/* Actions Column */}
                         <td>
@@ -1037,7 +1033,10 @@ const DeanDashboard = () => {
                 <strong>Student:</strong> {selectedStudentForRejection.fullName}
               </p>
               <p style={{ margin: '8px 0', color: '#374151' }}>
-                <strong>GPA:</strong> {selectedStudentForRejection.gpa.toFixed(2)}
+                <strong>Email:</strong> {selectedStudentForRejection.email}
+              </p>
+              <p style={{ margin: '8px 0', color: '#374151' }}>
+                <strong>GPA:</strong> {selectedStudentForRejection.gpa ? selectedStudentForRejection.gpa.toFixed(2) : 'N/A'}
               </p>
             </div>
 
