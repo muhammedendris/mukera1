@@ -158,6 +158,49 @@ const DeanDashboard = () => {
     return 'grade-b'; // Default to blue
   };
 
+  // Calculate summary statistics for evaluations tab
+  const getEvaluationStats = () => {
+    const totalStudents = verifiedStudents.length;
+    const completedEvals = verifiedStudents.filter(s => s.evaluation).length;
+    const pendingEvals = totalStudents - completedEvals;
+
+    // Convert letter grades to GPA
+    const gradeMap = {
+      'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D': 1.0, 'F': 0.0
+    };
+
+    const evaluatedStudents = verifiedStudents.filter(s => s.evaluation);
+    const avgGradeNumeric = evaluatedStudents.length > 0
+      ? evaluatedStudents.reduce((sum, s) => sum + (gradeMap[s.evaluation.grade] || 0), 0) / evaluatedStudents.length
+      : 0;
+
+    const avgGradeDisplay = avgGradeNumeric.toFixed(2);
+    const completionRate = totalStudents > 0
+      ? Math.round((completedEvals / totalStudents) * 100)
+      : 0;
+
+    return { totalStudents, completedEvals, pendingEvals, avgGradeDisplay, completionRate };
+  };
+
+  // Get student initials for avatar
+  const getInitials = (fullName) => {
+    if (!fullName) return '?';
+    const parts = fullName.trim().split(' ');
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  // Get avatar color based on name hash
+  const getAvatarColor = (fullName) => {
+    if (!fullName) return '#0060AA';
+    const hash = fullName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = ['#0060AA', '#28A745', '#17A2B8', '#6C757D', '#FFC107', '#DC3545'];
+    return colors[hash % colors.length];
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -353,75 +396,128 @@ const DeanDashboard = () => {
 
         {/* EVALUATIONS TAB */}
         {activeTab === 'evaluations' && (
-          <div className="card">
-            <h2>Student Evaluations</h2>
-            {verifiedStudents.length === 0 ? (
-              <p>No verified students with internships yet.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Student Name</th>
-                      <th>Email</th>
-                      <th>Company</th>
-                      <th>Advisor</th>
-                      <th>Evaluation Status</th>
-                      <th>Grade</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {verifiedStudents.map((item) => (
-                      <tr key={item.student._id}>
-                        <td>{item.student.fullName}</td>
-                        <td>{item.student.email}</td>
-                        <td>{item.application.companyName}</td>
-                        <td>
-                          {item.application.advisor
-                            ? item.application.advisor.fullName
-                            : 'Not Assigned'}
-                        </td>
-                        <td>
-                          <span style={{
-                            padding: '4px 12px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            background: item.evaluation ? '#d4edda' : '#fff3cd',
-                            color: item.evaluation ? '#155724' : '#856404'
-                          }}>
-                            {item.evaluation ? '\u2713 Evaluated' : 'Pending'}
-                          </span>
-                        </td>
-                        <td>
-                          {item.evaluation ? (
-                            <strong style={{ color: '#667eea' }}>{item.evaluation.grade}</strong>
-                          ) : (
-                            <span style={{ color: '#999' }}>-</span>
-                          )}
-                        </td>
-                        <td>
-                          {item.evaluation ? (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => viewEvaluationDetails(item)}
-                            >
-                              View Details
-                            </button>
-                          ) : (
-                            <span style={{ color: '#999', fontSize: '12px' }}>
-                              No evaluation submitted
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <>
+            {/* Summary Cards Section */}
+            <div className="evaluations-summary-grid">
+              {/* Total Students */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon">
+                  👥
+                </div>
+                <div className="eval-card-label">Total Students</div>
+                <div className="eval-card-value">{getEvaluationStats().totalStudents}</div>
+                <div className="eval-card-sublabel">In Internship Program</div>
               </div>
-            )}
-          </div>
+
+              {/* Pending Evaluations */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon warning">
+                  ⏳
+                </div>
+                <div className="eval-card-label">Pending Evaluations</div>
+                <div className="eval-card-value">{getEvaluationStats().pendingEvals}</div>
+                <div className="eval-card-sublabel">Awaiting Submission</div>
+              </div>
+
+              {/* Completed Evaluations */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon success">
+                  ✓
+                </div>
+                <div className="eval-card-label">Completed</div>
+                <div className="eval-card-value">{getEvaluationStats().completedEvals}</div>
+                <div className="eval-card-sublabel">
+                  {getEvaluationStats().completionRate}% Complete
+                </div>
+              </div>
+
+              {/* Average Grade */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon info">
+                  ⭐
+                </div>
+                <div className="eval-card-label">Average Grade</div>
+                <div className="eval-card-value">{getEvaluationStats().avgGradeDisplay}</div>
+                <div className="eval-card-sublabel">GPA Scale</div>
+              </div>
+            </div>
+
+            {/* Premium Table */}
+            <div className="premium-evaluations-table">
+              {verifiedStudents.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>No verified students with internships yet.</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Company</th>
+                        <th>Advisor</th>
+                        <th>Status</th>
+                        <th>Grade</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {verifiedStudents.map((item) => (
+                        <tr key={item.student._id}>
+                          <td>
+                            <div className="student-cell">
+                              <div
+                                className="student-avatar"
+                                style={{ background: getAvatarColor(item.student.fullName) }}
+                              >
+                                {getInitials(item.student.fullName)}
+                              </div>
+                              <div className="student-info">
+                                <div className="student-name">{item.student.fullName}</div>
+                                <div className="student-email">{item.student.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{item.application.companyName}</td>
+                          <td>
+                            {item.application.advisor
+                              ? item.application.advisor.fullName
+                              : <span style={{ color: '#9CA3AF' }}>Not Assigned</span>}
+                          </td>
+                          <td>
+                            <span className={`eval-status-badge ${item.evaluation ? 'completed' : 'pending'}`}>
+                              {item.evaluation ? '✓ Evaluated' : '⏳ Pending'}
+                            </span>
+                          </td>
+                          <td>
+                            {item.evaluation ? (
+                              <span className="grade-display">{item.evaluation.grade}</span>
+                            ) : (
+                              <span className="grade-display no-grade">—</span>
+                            )}
+                          </td>
+                          <td>
+                            {item.evaluation ? (
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => viewEvaluationDetails(item)}
+                              >
+                                View Details
+                              </button>
+                            ) : (
+                              <span style={{ color: '#9CA3AF', fontSize: '12px', fontStyle: 'italic' }}>
+                                No evaluation
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 

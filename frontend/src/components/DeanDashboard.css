@@ -458,3 +458,241 @@
     height: 16px;
   }
 }
+
+/* ===================================
+   EVALUATIONS TAB - PREMIUM SAAS
+   =================================== */
+
+/* Summary Cards Grid */
+.evaluations-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.eval-summary-card {
+  background: #FFFFFF;
+  border: 1px solid #E1E8ED;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.eval-summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 96, 170, 0.12);
+}
+
+.eval-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0060AA 0%, #004D8C 100%);
+}
+
+.eval-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 16px;
+  background: #CCE0F5;
+  color: #0060AA;
+}
+
+.eval-card-icon.success {
+  background: #D4EDDA;
+  color: #28A745;
+}
+
+.eval-card-icon.warning {
+  background: #FFF3CD;
+  color: #FFC107;
+}
+
+.eval-card-icon.info {
+  background: #D1ECF1;
+  color: #17A2B8;
+}
+
+.eval-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6B7280;
+  margin-bottom: 8px;
+}
+
+.eval-card-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.eval-card-sublabel {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+/* Premium Table Container */
+.premium-evaluations-table {
+  background: #FFFFFF;
+  border: 1px solid #E1E8ED;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.premium-evaluations-table .data-table {
+  margin-top: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.premium-evaluations-table .data-table th {
+  background: #F8F9FA;
+  padding: 16px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4B5563;
+  border-bottom: 2px solid #E9ECEF;
+}
+
+.premium-evaluations-table .data-table td {
+  padding: 20px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #F1F3F5;
+}
+
+.premium-evaluations-table .data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.premium-evaluations-table .data-table tbody tr:hover {
+  background: #F8F9FA;
+  transform: scale(1.002);
+}
+
+.premium-evaluations-table .data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Student Column with Avatar */
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-name {
+  font-weight: 600;
+  color: #1F2937;
+  font-size: 14px;
+}
+
+.student-email {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+/* Enhanced Status Badge */
+.eval-status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eval-status-badge.completed {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.eval-status-badge.pending {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+/* Grade Display */
+.grade-display {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0060AA;
+}
+
+.grade-display.no-grade {
+  color: #D1D5DB;
+}
+
+/* Responsive Grid */
+@media (max-width: 1200px) {
+  .evaluations-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .evaluations-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .eval-card-value {
+    font-size: 28px;
+  }
+
+  .premium-evaluations-table .data-table th,
+  .premium-evaluations-table .data-table td {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .student-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
