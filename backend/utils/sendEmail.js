@@ -13,15 +13,27 @@ const EMAIL_CONFIG = {
 // Create reusable transporter with environment variables
 const createTransporter = () => {
   console.log('📧 Creating email transporter with Gmail...');
+  console.log('📧 Email User:', EMAIL_CONFIG.user);
+  console.log('📧 Email configured:', EMAIL_CONFIG.user ? 'Yes' : 'No');
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false, // Use TLS (port 587)
+    requireTLS: true, // Force TLS
     auth: {
       user: EMAIL_CONFIG.user,
       pass: EMAIL_CONFIG.password,
     },
+    tls: {
+      ciphers: 'SSLv3',
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    debug: true, // Enable debug output
+    logger: true // Log to console
   });
 
   console.log('✅ Email transporter created successfully');
