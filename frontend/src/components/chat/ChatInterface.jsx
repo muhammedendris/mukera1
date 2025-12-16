@@ -25,6 +25,19 @@ const ChatInterface = ({ applicationId, currentUserId }) => {
       },
     });
 
+    // Connection event listeners
+    socketRef.current.on('connect', () => {
+      console.log('✅ Socket.io connected:', socketRef.current.id);
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('❌ Socket.io connection error:', error.message);
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('⚠️ Socket.io disconnected:', reason);
+    });
+
     // Join the chat room for this application
     socketRef.current.emit('join-chat', applicationId);
 

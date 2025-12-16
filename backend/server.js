@@ -17,9 +17,9 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173', // Vite port (5173) or 3000
+    origin: '*', // Allow all origins (matches HTTP CORS behavior)
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: false // Must be false when origin is '*'
   }
 });
 
@@ -91,15 +91,17 @@ const connectDB = async () => {
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('✅ Socket.io client connected:', socket.id);
+  console.log('   Auth token:', socket.handshake.auth.token ? 'Present' : 'Missing');
 
   socket.on('join-chat', (applicationId) => {
     socket.join(`chat-${applicationId}`);
-    console.log(`Socket ${socket.id} joined chat-${applicationId}`);
+    console.log(`📥 Socket ${socket.id} joined room: chat-${applicationId}`);
   });
 
   socket.on('leave-chat', (applicationId) => {
     socket.leave(`chat-${applicationId}`);
+    console.log(`📤 Socket ${socket.id} left room: chat-${applicationId}`);
   });
 
   socket.on('typing', ({ applicationId, isTyping }) => {
@@ -107,7 +109,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('⚠️ Client disconnected:', socket.id);
   });
 });
 
