@@ -294,22 +294,30 @@ const AdminDashboard = () => {
                               </button>
                             </>
                           )}
-                          {app.status === 'accepted' && !app.assignedAdvisor && (
-                            <select
-                              className="form-control"
-                              onChange={(e) => handleAssignAdvisor(app._id, e.target.value)}
-                              defaultValue=""
-                            >
-                              <option value="">Assign Advisor</option>
-                              {advisors.map((advisor) => (
-                                <option key={advisor._id} value={advisor._id}>
-                                  {advisor.fullName}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                          {app.assignedAdvisor && (
-                            <span>Advisor: {app.assignedAdvisor.fullName}</span>
+                          {app.status === 'accepted' && (
+                            <div>
+                              <select
+                                className="form-control"
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    handleAssignAdvisor(app._id, e.target.value);
+                                  }
+                                }}
+                                value={app.assignedAdvisor?._id || ""}
+                              >
+                                <option value="">Select Advisor</option>
+                                {advisors.map((advisor) => (
+                                  <option key={advisor._id} value={advisor._id}>
+                                    {advisor.fullName}
+                                  </option>
+                                ))}
+                              </select>
+                              {app.assignedAdvisor && (
+                                <small className="text-muted d-block mt-1">
+                                  Current: {app.assignedAdvisor.fullName}
+                                </small>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>
