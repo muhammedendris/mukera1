@@ -77,7 +77,9 @@ export const chatsAPI = {
   send: (messageData) => api.post('/chats', messageData),
   getHistory: (applicationId) => api.get(`/chats/${applicationId}`),
   getUnreadCount: () => api.get('/chats/unread/count'),
-  clear: (applicationId) => api.delete(`/chats/${applicationId}`)
+  clear: (applicationId) => api.delete(`/chats/${applicationId}`),
+  edit: (id, message) => api.put(`/chats/${id}`, { message }),
+  deleteMessage: (id) => api.delete(`/chats/message/${id}`)
 };
 
 // Evaluations API

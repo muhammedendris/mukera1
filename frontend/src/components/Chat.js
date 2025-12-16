@@ -7,12 +7,13 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editedText, setEditedText] = useState('');
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
-    // Scroll only the messages area, not the entire window
     const messagesArea = messagesEndRef.current?.parentElement;
     if (messagesArea) {
       messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -41,7 +42,6 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
       }
     });
 
-    // Connection event listeners
     socketRef.current.on('connect', () => {
       console.log('✅ Socket.io connected:', socketRef.current.id);
     });
@@ -62,6 +62,18 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
       setMessages(prev => [...prev, message]);
     });
 
+    // Listen for edited messages
+    socketRef.current.on('receive_edit_message', (editedMessage) => {
+      setMessages(prev => prev.map(msg =>
+        msg._id === editedMessage._id ? editedMessage : msg
+      ));
+    });
+
+    // Listen for deleted messages
+    socketRef.current.on('receive_delete_message', (data) => {
+      setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+    });
+
     // Listen for chat cleared event
     socketRef.current.on('chat-cleared', () => {
       setMessages([]);
@@ -69,7 +81,7 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
 
     // Listen for advisor assignment
     socketRef.current.on('advisor-assigned', () => {
-      loadMessages(); // Reload messages when advisor is assigned
+      loadMessages();
     });
 
     // Cleanup on unmount
@@ -95,14 +107,48 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
         message: newMessage
       });
       setNewMessage('');
-      // No need to call loadMessages() - Socket.io will update in real-time
     } catch (error) {
       console.error('Failed to send message:', error);
     }
   }, [applicationId, newMessage]);
 
+  const handleEditMessage = useCallback((messageId, currentText) => {
+    setEditingMessageId(messageId);
+    setEditedText(currentText);
+  }, []);
+
+  const handleSaveEdit = useCallback(async (messageId) => {
+    if (!editedText.trim()) return;
+
+    try {
+      await chatsAPI.edit(messageId, editedText);
+      setEditingMessageId(null);
+      setEditedText('');
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      alert('Failed to edit message: ' + (error.response?.data?.message || error.message));
+    }
+  }, [editedText]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessageId(null);
+    setEditedText('');
+  }, []);
+
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) {
+      return;
+    }
+
+    try {
+      await chatsAPI.deleteMessage(messageId);
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      alert('Failed to delete message: ' + (error.response?.data?.message || error.message));
+    }
+  }, []);
+
   const handleClearChat = useCallback(async () => {
-    // Show strong warning
     const confirmMessage =
       'Are you sure you want to clear all messages?\n\n' +
       '⚠️ This will PERMANENTLY delete ALL chat history.\n\n' +
@@ -113,20 +159,15 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
     }
 
     try {
-      console.log('🗑️ Clearing chat for application:', applicationId);
-
       const response = await chatsAPI.clear(applicationId);
 
       if (response.data.success) {
-        console.log('✅ Chat cleared successfully');
         setMessages([]);
         alert('✅ Chat cleared successfully!');
       } else {
-        console.error('❌ Failed to clear chat:', response.data.message);
         alert('❌ Failed to clear chat: ' + response.data.message);
       }
     } catch (error) {
-      console.error('❌ Error clearing chat:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
       alert('❌ Failed to clear chat: ' + errorMessage);
     }
@@ -138,7 +179,7 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
 
   return (
     <div className="chat-container" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      {/* Chat Header with Clear Button */}
+      {/* Chat Header */}
       <div style={{
         background: hasAdvisor
           ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
@@ -182,12 +223,13 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
             e.target.style.backgroundColor = '#dc3545';
             e.target.style.transform = 'translateY(0)';
           }}
-          title="Clear all messages - This will permanently delete all chat history"
+          title="Clear all messages"
         >
           🗑️ Clear Chat
         </button>
       </div>
 
+      {/* Messages Area */}
       <div className="chat-messages" style={{
         background: 'white',
         padding: '20px',
@@ -208,58 +250,180 @@ const Chat = React.memo(({ applicationId, hasAdvisor = false, advisorInfo = null
               : 'No messages yet. Start preparing your questions for when an advisor is assigned!'}
           </p>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg._id}
-              className={`chat-message ${
-                msg.sender._id === user._id ? 'message-sent' : 'message-received'
-              }`}
-              style={{
-                display: 'flex',
-                justifyContent: msg.sender._id === user._id ? 'flex-end' : 'flex-start',
-                marginBottom: '15px'
-              }}
-            >
-              <div style={{
-                maxWidth: '70%',
-                padding: '12px 16px',
-                borderRadius: '18px',
-                background: msg.sender._id === user._id
-                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                  : '#e9ecef',
-                color: msg.sender._id === user._id ? 'white' : '#333',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)'
-              }}>
-                <div className="message-sender" style={{
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  marginBottom: '4px',
-                  opacity: msg.sender._id === user._id ? 0.9 : 1,
-                  color: msg.sender._id === user._id ? 'white' : '#667eea'
+          messages.map((msg) => {
+            const isOwnMessage = msg.sender._id === user._id;
+            const isEditing = editingMessageId === msg._id;
+
+            return (
+              <div
+                key={msg._id}
+                className={`chat-message ${
+                  isOwnMessage ? 'message-sent' : 'message-received'
+                }`}
+                style={{
+                  display: 'flex',
+                  justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
+                  marginBottom: '15px'
+                }}
+              >
+                <div style={{
+                  maxWidth: '70%',
+                  padding: '12px 16px',
+                  borderRadius: '18px',
+                  background: isOwnMessage
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : '#e9ecef',
+                  color: isOwnMessage ? 'white' : '#333',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+                  position: 'relative'
                 }}>
-                  {msg.sender.fullName}
-                </div>
-                <div className="message-content" style={{
-                  fontSize: '15px',
-                  lineHeight: '1.5',
-                  wordWrap: 'break-word'
-                }}>
-                  {msg.message}
-                </div>
-                <div className="message-time" style={{
-                  fontSize: '11px',
-                  marginTop: '4px',
-                  opacity: 0.8
-                }}>
-                  {new Date(msg.timestamp).toLocaleString()}
+                  {/* Sender Name */}
+                  <div className="message-sender" style={{
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    marginBottom: '4px',
+                    opacity: isOwnMessage ? 0.9 : 1,
+                    color: isOwnMessage ? 'white' : '#667eea'
+                  }}>
+                    {msg.sender.fullName}
+                  </div>
+
+                  {/* Message Content or Edit Input */}
+                  {isEditing ? (
+                    <div>
+                      <input
+                        type="text"
+                        value={editedText}
+                        onChange={(e) => setEditedText(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '2px solid #667eea',
+                          borderRadius: '8px',
+                          fontSize: '15px',
+                          marginBottom: '8px'
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveEdit(msg._id);
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleSaveEdit(msg._id)}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          ✓ Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#6c757d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="message-content" style={{
+                        fontSize: '15px',
+                        lineHeight: '1.5',
+                        wordWrap: 'break-word'
+                      }}>
+                        {msg.message}
+                      </div>
+
+                      {/* Message Time and Edited Badge */}
+                      <div className="message-time" style={{
+                        fontSize: '11px',
+                        marginTop: '4px',
+                        opacity: 0.8,
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center'
+                      }}>
+                        <span>{new Date(msg.timestamp).toLocaleString()}</span>
+                        {msg.isEdited && (
+                          <span style={{
+                            fontSize: '10px',
+                            fontStyle: 'italic',
+                            opacity: 0.7
+                          }}>
+                            (edited)
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Edit/Delete Buttons (Only for Own Messages) */}
+                      {isOwnMessage && (
+                        <div style={{
+                          marginTop: '8px',
+                          display: 'flex',
+                          gap: '8px'
+                        }}>
+                          <button
+                            onClick={() => handleEditMessage(msg._id, msg.message)}
+                            style={{
+                              padding: '4px 10px',
+                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                              color: 'white',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}
+                            title="Edit message"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMessage(msg._id)}
+                            style={{
+                              padding: '4px 10px',
+                              backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                              color: 'white',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}
+                            title="Delete message"
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Message Input Form */}
       <form onSubmit={handleSubmit} className="chat-form" style={{
         display: 'flex',
         gap: '12px',

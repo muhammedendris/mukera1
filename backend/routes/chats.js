@@ -191,6 +191,130 @@ router.get('/:applicationId', isAuthenticated, async (req, res) => {
   }
 });
 
+// @route   PUT /api/chats/:id
+// @desc    Edit a message (Only message sender)
+// @access  Private
+router.put('/:id', isAuthenticated, [
+  body('message').notEmpty().withMessage('Message cannot be empty')
+], async (req, res) => {
+  try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { id } = req.params;
+    const { message } = req.body;
+
+    // Find the message
+    const chat = await Chat.findById(id);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message not found'
+      });
+    }
+
+    // Verify user is the sender
+    if (chat.sender.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit your own messages'
+      });
+    }
+
+    // Update the message
+    chat.message = message;
+    chat.isEdited = true;
+    chat.editedAt = new Date();
+    await chat.save();
+
+    // Populate sender and receiver
+    await chat.populate('sender', 'fullName role');
+    if (chat.receiver) {
+      await chat.populate('receiver', 'fullName role');
+    }
+
+    // Emit real-time edit event via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat-${chat.application}`).emit('receive_edit_message', chat);
+    }
+
+    res.json({
+      success: true,
+      message: 'Message edited successfully',
+      chat
+    });
+  } catch (error) {
+    console.error('Edit message error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
+
+// @route   DELETE /api/chats/message/:id
+// @desc    Delete a single message (Only message sender)
+// @access  Private
+router.delete('/message/:id', isAuthenticated, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the message
+    const chat = await Chat.findById(id);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message not found'
+      });
+    }
+
+    // Verify user is the sender
+    if (chat.sender.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own messages'
+      });
+    }
+
+    const applicationId = chat.application;
+
+    // Delete the message
+    await Chat.findByIdAndDelete(id);
+
+    // Emit real-time delete event via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat-${applicationId}`).emit('receive_delete_message', {
+        messageId: id,
+        applicationId
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Message deleted successfully',
+      messageId: id
+    });
+  } catch (error) {
+    console.error('Delete message error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
+
 // @route   DELETE /api/chats/:applicationId
 // @desc    Clear all messages for an application (PERMANENT)
 // @access  Private (Student or Advisor)

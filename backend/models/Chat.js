@@ -29,6 +29,18 @@ const chatSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  editedAt: {
+    type: Date,
+    default: null
+  },
   timestamp: {
     type: Date,
     default: Date.now
