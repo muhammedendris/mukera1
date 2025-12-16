@@ -1,24 +1,23 @@
 const nodemailer = require('nodemailer');
 
 // ============================================
-// EMAIL CONFIGURATION (Hardcoded for Testing)
+// EMAIL CONFIGURATION (Using Environment Variables)
 // ============================================
 const EMAIL_CONFIG = {
-  service: 'gmail',
-  user: 'muhammedendris565@gmail.com',
-  password: 'wqeb pkbw wxdq eisi',  // App Password
-  fromName: 'Internship System',
-  fromEmail: 'muhammedendris565@gmail.com'
+  user: process.env.EMAIL_USER,
+  password: process.env.EMAIL_PASSWORD,
+  fromName: process.env.EMAIL_FROM_NAME || 'Internship System',
+  fromEmail: process.env.EMAIL_FROM || process.env.EMAIL_USER
 };
 
-// Create reusable transporter with hardcoded credentials
+// Create reusable transporter with environment variables
 const createTransporter = () => {
   console.log('📧 Creating email transporter with Gmail...');
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Use TLS
+    secure: false, // Use TLS (port 587)
     auth: {
       user: EMAIL_CONFIG.user,
       pass: EMAIL_CONFIG.password,
