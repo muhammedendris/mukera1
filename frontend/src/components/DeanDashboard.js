@@ -2,6 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, evaluationsAPI, applicationsAPI } from '../services/api';
 import axios from 'axios';
+import './DeanDashboard.css';
+
+// Circular Progress Component for Overall Performance
+const CircularProgress = ({ value, max = 100 }) => {
+  const percentage = (value / max) * 100;
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="circular-progress">
+      <svg width="160" height="160">
+        {/* Background circle */}
+        <circle
+          cx="80"
+          cy="80"
+          r={radius}
+          fill="none"
+          stroke="#E5E7EB"
+          strokeWidth="12"
+        />
+        {/* Progress circle */}
+        <circle
+          cx="80"
+          cy="80"
+          r={radius}
+          fill="none"
+          stroke="#0060AA"
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 80 80)"
+          style={{ transition: 'stroke-dashoffset 1s ease' }}
+        />
+      </svg>
+      <div className="circular-progress-text">
+        <div className="circular-progress-value">{value}</div>
+        <div className="circular-progress-max">/ {max}</div>
+      </div>
+    </div>
+  );
+};
 
 const DeanDashboard = () => {
   const { user } = useAuth();
@@ -103,6 +146,16 @@ const DeanDashboard = () => {
 
   const viewEvaluationDetails = (studentData) => {
     setSelectedStudent(studentData);
+  };
+
+  // Helper function for grade color coding
+  const getGradeClass = (grade) => {
+    if (grade === 'A' || grade === 'A-') return 'grade-a';
+    if (grade === 'B+' || grade === 'B' || grade === 'B-') return 'grade-b';
+    if (grade === 'C+' || grade === 'C' || grade === 'C-') return 'grade-c';
+    if (grade === 'D') return 'grade-d';
+    if (grade === 'F') return 'grade-f';
+    return 'grade-b'; // Default to blue
   };
 
   if (loading) {
@@ -438,214 +491,136 @@ const DeanDashboard = () => {
         </div>
       )}
 
-      {/* Evaluation Details Modal */}
+      {/* Premium Evaluation Details Modal */}
       {selectedStudent && selectedStudent.evaluation && (
         <div
-          className="modal-overlay"
+          className="premium-evaluation-modal"
           onClick={() => setSelectedStudent(null)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-            overflowY: 'auto'
-          }}
         >
           <div
-            className="modal-content"
+            className="premium-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              maxWidth: '800px',
-              width: '90%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-              margin: '20px'
-            }}
           >
             <button
               onClick={() => setSelectedStudent(null)}
-              style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '10px 20px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '14px'
-              }}
+              className="premium-close-btn"
             >
               Close
             </button>
 
-            <h2 style={{ marginBottom: '10px', color: '#667eea' }}>
-              Evaluation Details
-            </h2>
-            <p style={{ color: '#666', marginBottom: '25px' }}>
-              Student: <strong>{selectedStudent.student.fullName}</strong> |
-              Company: <strong>{selectedStudent.application.companyName}</strong>
-            </p>
-
-            {/* Grade and Overall Performance */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px',
-              marginBottom: '25px'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                padding: '20px',
-                borderRadius: '12px',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Final Grade</h3>
-                <p style={{ margin: 0, fontSize: '48px', fontWeight: 'bold' }}>
-                  {selectedStudent.evaluation.grade}
-                </p>
-              </div>
-              <div style={{
-                background: '#f8f9fa',
-                padding: '20px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '2px solid #e9ecef'
-              }}>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#333' }}>
-                  Overall Performance
-                </h3>
-                <p style={{ margin: 0, fontSize: '48px', fontWeight: 'bold', color: '#667eea' }}>
-                  {selectedStudent.evaluation.overallPerformance}/100
-                </p>
-              </div>
-            </div>
-
-            {/* Skill Breakdown */}
-            <div style={{ marginBottom: '25px' }}>
-              <h3 style={{ marginBottom: '15px', color: '#333' }}>Skill Assessment</h3>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                {[
-                  { label: 'Technical Skills', value: selectedStudent.evaluation.technicalSkills },
-                  { label: 'Communication', value: selectedStudent.evaluation.communication },
-                  { label: 'Professionalism', value: selectedStudent.evaluation.professionalism },
-                  { label: 'Problem Solving', value: selectedStudent.evaluation.problemSolving }
-                ].map((skill) => (
-                  <div key={skill.label}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      marginBottom: '5px'
-                    }}>
-                      <span style={{ fontWeight: '500', color: '#555' }}>{skill.label}</span>
-                      <span style={{ fontWeight: 'bold', color: '#667eea' }}>
-                        {skill.value}/100
-                      </span>
-                    </div>
-                    <div style={{
-                      height: '8px',
-                      background: '#e9ecef',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${skill.value}%`,
-                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                        borderRadius: '4px',
-                        transition: 'width 0.3s ease'
-                      }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recommendation */}
-            <div style={{
-              background: '#f8f9fa',
-              padding: '15px 20px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              borderLeft: '4px solid #667eea'
-            }}>
-              <strong style={{ color: '#333' }}>Recommendation:</strong>{' '}
-              <span style={{ color: '#667eea', fontWeight: '600' }}>
-                {selectedStudent.evaluation.recommendation}
-              </span>
-            </div>
-
-            {/* Comments */}
-            <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ color: '#333', marginBottom: '10px' }}>Advisor Comments</h4>
-              <p style={{
-                background: '#f8f9fa',
-                padding: '15px',
-                borderRadius: '8px',
-                lineHeight: '1.6',
-                color: '#555'
-              }}>
-                {selectedStudent.evaluation.comments}
+            {/* Header */}
+            <div className="premium-modal-header">
+              <h2>Evaluation Details</h2>
+              <p>
+                <strong>{selectedStudent.student.fullName}</strong> • {selectedStudent.application.companyName}
               </p>
             </div>
 
-            {/* Strengths */}
+            {/* Top Summary Cards: Grade + Performance */}
+            <div className="premium-summary-grid">
+              {/* Final Grade Card with Color Coding */}
+              <div className={`premium-grade-card ${getGradeClass(selectedStudent.evaluation.grade)}`}>
+                <div className="grade-label">Final Grade</div>
+                <div className="grade-value">{selectedStudent.evaluation.grade}</div>
+                <div className="grade-sublabel">Academic Performance</div>
+              </div>
+
+              {/* Overall Performance Card with Circular Progress */}
+              <div className="premium-performance-card">
+                <h3>Overall Performance</h3>
+                <CircularProgress
+                  value={selectedStudent.evaluation.overallPerformance}
+                  max={100}
+                />
+              </div>
+            </div>
+
+            {/* Skill Assessment Section with Icons */}
+            <div className="premium-skills-section">
+              <h3>Skill Assessment</h3>
+
+              {[
+                {
+                  label: 'Technical Skills',
+                  value: selectedStudent.evaluation.technicalSkills,
+                  icon: '💻'
+                },
+                {
+                  label: 'Communication',
+                  value: selectedStudent.evaluation.communication,
+                  icon: '💬'
+                },
+                {
+                  label: 'Professionalism',
+                  value: selectedStudent.evaluation.professionalism,
+                  icon: '👔'
+                },
+                {
+                  label: 'Problem Solving',
+                  value: selectedStudent.evaluation.problemSolving,
+                  icon: '🧩'
+                }
+              ].map((skill) => (
+                <div key={skill.label} className="premium-skill-item">
+                  <div className="skill-icon">{skill.icon}</div>
+                  <div className="skill-info">
+                    <div className="skill-label">
+                      <span>{skill.label}</span>
+                      <span>{skill.value}/100</span>
+                    </div>
+                    <div className="skill-progress-track">
+                      <div
+                        className="skill-progress-fill"
+                        style={{ width: `${skill.value}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Recommendation Section */}
+            <div className="premium-section">
+              <div className="premium-section-title">Recommendation</div>
+              <div className="premium-section-content">
+                {selectedStudent.evaluation.recommendation}
+              </div>
+            </div>
+
+            {/* Comments Section */}
+            <div className="premium-section">
+              <div className="premium-section-title">Advisor Comments</div>
+              <div className="premium-section-content">
+                {selectedStudent.evaluation.comments}
+              </div>
+            </div>
+
+            {/* Strengths Section (Green border) */}
             {selectedStudent.evaluation.strengths && (
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#28a745', marginBottom: '10px' }}>Strengths</h4>
-                <p style={{
-                  background: '#d4edda',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  lineHeight: '1.6',
-                  color: '#155724'
-                }}>
+              <div className="premium-section" style={{ borderLeftColor: '#28A745' }}>
+                <div className="premium-section-title">Strengths</div>
+                <div className="premium-section-content">
                   {selectedStudent.evaluation.strengths}
-                </p>
+                </div>
               </div>
             )}
 
-            {/* Areas for Improvement */}
+            {/* Areas for Improvement Section (Yellow border) */}
             {selectedStudent.evaluation.areasForImprovement && (
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#ffc107', marginBottom: '10px' }}>Areas for Improvement</h4>
-                <p style={{
-                  background: '#fff3cd',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  lineHeight: '1.6',
-                  color: '#856404'
-                }}>
+              <div className="premium-section" style={{ borderLeftColor: '#FFC107' }}>
+                <div className="premium-section-title">Areas for Improvement</div>
+                <div className="premium-section-content">
                   {selectedStudent.evaluation.areasForImprovement}
-                </p>
+                </div>
               </div>
             )}
 
             {/* Metadata */}
-            <div style={{
-              borderTop: '1px solid #e9ecef',
-              paddingTop: '15px',
-              fontSize: '13px',
-              color: '#666'
-            }}>
-              <p style={{ margin: '5px 0' }}>
+            <div className="premium-metadata">
+              <p>
                 <strong>Evaluated by:</strong> {selectedStudent.evaluation.advisor?.fullName || 'N/A'}
               </p>
-              <p style={{ margin: '5px 0' }}>
+              <p>
                 <strong>Submission Date:</strong>{' '}
                 {new Date(selectedStudent.evaluation.submittedAt).toLocaleString()}
               </p>
