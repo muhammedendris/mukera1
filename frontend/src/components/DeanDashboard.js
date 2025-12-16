@@ -67,63 +67,7 @@ const DeanDashboard = () => {
 
   // Mock data for acceptance letter verifications
   // TODO: Replace with API call to GET /api/acceptance-letters/pending
-  const mockPendingAcceptance = [
-    {
-      _id: '1',
-      fullName: 'Ahmed Ibrahim',
-      email: 'ahmed.ibrahim@university.edu',
-      gpa: 3.85,
-      companyName: 'Tech Solutions Ltd',
-      acceptanceLetterUrl: '/mock/letters/ahmed_acceptance.pdf',
-      submittedDate: '2024-01-15T10:30:00',
-      university: user.university,
-      department: user.department
-    },
-    {
-      _id: '2',
-      fullName: 'Sara Mohamed',
-      email: 'sara.mohamed@university.edu',
-      gpa: 3.92,
-      companyName: 'Innovation Hub Inc',
-      acceptanceLetterUrl: '/mock/letters/sara_acceptance.pdf',
-      submittedDate: '2024-01-16T14:20:00',
-      university: user.university,
-      department: user.department
-    },
-    {
-      _id: '3',
-      fullName: 'Omar Hassan',
-      email: 'omar.hassan@university.edu',
-      gpa: 3.45,
-      companyName: 'Digital Dynamics Corp',
-      acceptanceLetterUrl: '/mock/letters/omar_acceptance.pdf',
-      submittedDate: '2024-01-17T09:15:00',
-      university: user.university,
-      department: user.department
-    },
-    {
-      _id: '4',
-      fullName: 'Layla Mustafa',
-      email: 'layla.mustafa@university.edu',
-      gpa: 3.68,
-      companyName: 'Future Tech Labs',
-      acceptanceLetterUrl: '/mock/letters/layla_acceptance.pdf',
-      submittedDate: '2024-01-18T11:45:00',
-      university: user.university,
-      department: user.department
-    },
-    {
-      _id: '5',
-      fullName: 'Khaled Amin',
-      email: 'khaled.amin@university.edu',
-      gpa: 3.20,
-      companyName: 'Smart Systems Inc',
-      acceptanceLetterUrl: '/mock/letters/khaled_acceptance.pdf',
-      submittedDate: '2024-01-19T16:30:00',
-      university: user.university,
-      department: user.department
-    }
-  ];
+  const mockPendingAcceptance = [];
 
   useEffect(() => {
     loadPendingStudents();
@@ -461,7 +405,6 @@ const DeanDashboard = () => {
                     <tr>
                       <th>Student</th>
                       <th>GPA</th>
-                      <th>Company</th>
                       <th>Submitted Date</th>
                       <th>Letter</th>
                       <th>Actions</th>
@@ -498,11 +441,6 @@ const DeanDashboard = () => {
                           }}>
                             {student.gpa.toFixed(2)}
                           </span>
-                        </td>
-
-                        {/* Company Column */}
-                        <td>
-                          <strong>{student.companyName}</strong>
                         </td>
 
                         {/* Submitted Date */}
@@ -1097,9 +1035,6 @@ const DeanDashboard = () => {
             <div style={{ marginBottom: '20px' }}>
               <p style={{ margin: '8px 0', color: '#374151' }}>
                 <strong>Student:</strong> {selectedStudentForRejection.fullName}
-              </p>
-              <p style={{ margin: '8px 0', color: '#374151' }}>
-                <strong>Company:</strong> {selectedStudentForRejection.companyName}
               </p>
               <p style={{ margin: '8px 0', color: '#374151' }}>
                 <strong>GPA:</strong> {selectedStudentForRejection.gpa.toFixed(2)}
