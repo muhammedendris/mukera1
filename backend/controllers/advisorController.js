@@ -4,14 +4,14 @@ const Chat = require('../models/Chat');
 
 /**
  * @desc    Assign advisor to student application (Admin only)
- * @route   PATCH /api/applications/:applicationId/assign-advisor
+ * @route   PATCH /api/applications/:id/assign-advisor
  * @access  Private (Admin)
- * @param   {string} req.params.applicationId - Application ID
+ * @param   {string} req.params.id - Application ID
  * @param   {string} req.body.advisorId - Advisor user ID
  */
 const assignAdvisor = async (req, res) => {
   try {
-    const { applicationId } = req.params;
+    const applicationId = req.params.id; // Changed from req.params.applicationId
     const { advisorId } = req.body;
 
     // Validate advisor ID is provided

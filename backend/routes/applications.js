@@ -196,9 +196,9 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 // @access  Private (Admin)
 router.patch('/:id/status', isAuthenticated, isAdmin, updateStudentStatus);
 
-// @route   PATCH /api/applications/:applicationId/assign-advisor
+// @route   PATCH /api/applications/:id/assign-advisor
 // @desc    Assign advisor to accepted application (Admin only)
 // @access  Private (Admin)
-router.patch('/:applicationId/assign-advisor', isAuthenticated, isAdmin, assignAdvisor);
+router.patch('/:id/assign-advisor', isAuthenticated, isAdmin, assignAdvisor);
 
 module.exports = router;
