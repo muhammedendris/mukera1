@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { evaluationsAPI } from '../services/api';
 
 const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
@@ -16,6 +16,39 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [existingEvaluation, setExistingEvaluation] = useState(null);
+  const [isUpdate, setIsUpdate] = useState(false);
+
+  // Fetch existing evaluation on component mount
+  useEffect(() => {
+    const fetchExistingEvaluation = async () => {
+      try {
+        const response = await evaluationsAPI.getByApplication(applicationId);
+        if (response.data.evaluation) {
+          setExistingEvaluation(response.data.evaluation);
+          setIsUpdate(true);
+          // Pre-fill form with existing data
+          setFormData({
+            grade: response.data.evaluation.grade,
+            technicalSkills: response.data.evaluation.technicalSkills,
+            communication: response.data.evaluation.communication,
+            professionalism: response.data.evaluation.professionalism,
+            problemSolving: response.data.evaluation.problemSolving,
+            overallPerformance: response.data.evaluation.overallPerformance,
+            comments: response.data.evaluation.comments,
+            strengths: response.data.evaluation.strengths || '',
+            areasForImprovement: response.data.evaluation.areasForImprovement || '',
+            recommendation: response.data.evaluation.recommendation
+          });
+        }
+      } catch (error) {
+        // No evaluation exists (404) - that's okay, create new
+        console.log('No existing evaluation found');
+      }
+    };
+
+    fetchExistingEvaluation();
+  }, [applicationId]);
 
   const handleChange = (e) => {
     setFormData({
@@ -27,24 +60,46 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     if (formData.comments.length < 50) {
       setError('Comments must be at least 50 characters');
-      setLoading(false);
       return;
     }
 
+    // Confirmation dialog
+    const actionText = isUpdate ? 'update' : 'submit';
+    const confirmMessage = isUpdate
+      ? `Are you sure you want to UPDATE this evaluation?\n\n` +
+        `This will replace the previous grade and comments.\n\n` +
+        `This action cannot be undone.`
+      : `Are you sure you want to SUBMIT this grade?\n\n` +
+        `Please verify all details are correct before submitting.`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await evaluationsAPI.submit({
-        ...formData,
-        applicationId,
-        studentId
-      });
+      if (isUpdate) {
+        // Update existing evaluation
+        await evaluationsAPI.update(existingEvaluation._id, formData);
+        alert('✅ Evaluation updated successfully!');
+      } else {
+        // Create new evaluation
+        await evaluationsAPI.submit({
+          ...formData,
+          applicationId,
+          studentId
+        });
+        alert('✅ Evaluation submitted successfully!');
+      }
+
       onSuccess();
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to submit evaluation');
+      setError(error.response?.data?.message || `Failed to ${actionText} evaluation`);
     } finally {
       setLoading(false);
     }
@@ -53,6 +108,17 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
   return (
     <div className="evaluation-form">
       <h3>Student Evaluation</h3>
+
+      {/* Update Mode Info Banner */}
+      {isUpdate && existingEvaluation && (
+        <div className="alert alert-info">
+          <strong>Update Mode</strong>
+          <br />
+          You are updating an existing evaluation for this student.
+          <br />
+          <small>Previously submitted on: {new Date(existingEvaluation.submittedAt).toLocaleDateString()}</small>
+        </div>
+      )}
 
       {error && <div className="alert alert-error">{error}</div>}
 
@@ -217,7 +283,10 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Evaluation'}
+          {loading
+            ? (isUpdate ? 'Updating...' : 'Submitting...')
+            : (isUpdate ? '✓ Update Evaluation' : '📤 Submit Evaluation')
+          }
         </button>
       </form>
     </div>
