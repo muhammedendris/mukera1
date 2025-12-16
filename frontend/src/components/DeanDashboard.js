@@ -56,10 +56,74 @@ const DeanDashboard = () => {
   const [message, setMessage] = useState('');
   const [selectedIdCard, setSelectedIdCard] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [selectedStudentForRejection, setSelectedStudentForRejection] = useState(null);
 
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
+
+  // Mock data for acceptance letter verifications
+  // TODO: Replace with API call to GET /api/acceptance-letters/pending
+  const mockPendingAcceptance = [
+    {
+      _id: '1',
+      fullName: 'Ahmed Ibrahim',
+      email: 'ahmed.ibrahim@university.edu',
+      gpa: 3.85,
+      companyName: 'Tech Solutions Ltd',
+      acceptanceLetterUrl: '/mock/letters/ahmed_acceptance.pdf',
+      submittedDate: '2024-01-15T10:30:00',
+      university: user.university,
+      department: user.department
+    },
+    {
+      _id: '2',
+      fullName: 'Sara Mohamed',
+      email: 'sara.mohamed@university.edu',
+      gpa: 3.92,
+      companyName: 'Innovation Hub Inc',
+      acceptanceLetterUrl: '/mock/letters/sara_acceptance.pdf',
+      submittedDate: '2024-01-16T14:20:00',
+      university: user.university,
+      department: user.department
+    },
+    {
+      _id: '3',
+      fullName: 'Omar Hassan',
+      email: 'omar.hassan@university.edu',
+      gpa: 3.45,
+      companyName: 'Digital Dynamics Corp',
+      acceptanceLetterUrl: '/mock/letters/omar_acceptance.pdf',
+      submittedDate: '2024-01-17T09:15:00',
+      university: user.university,
+      department: user.department
+    },
+    {
+      _id: '4',
+      fullName: 'Layla Mustafa',
+      email: 'layla.mustafa@university.edu',
+      gpa: 3.68,
+      companyName: 'Future Tech Labs',
+      acceptanceLetterUrl: '/mock/letters/layla_acceptance.pdf',
+      submittedDate: '2024-01-18T11:45:00',
+      university: user.university,
+      department: user.department
+    },
+    {
+      _id: '5',
+      fullName: 'Khaled Amin',
+      email: 'khaled.amin@university.edu',
+      gpa: 3.20,
+      companyName: 'Smart Systems Inc',
+      acceptanceLetterUrl: '/mock/letters/khaled_acceptance.pdf',
+      submittedDate: '2024-01-19T16:30:00',
+      university: user.university,
+      department: user.department
+    }
+  ];
 
   useEffect(() => {
     loadPendingStudents();
@@ -148,6 +212,98 @@ const DeanDashboard = () => {
     setSelectedStudent(studentData);
   };
 
+  // Handle opening acceptance letter in new tab
+  const handleViewLetter = (letterUrl) => {
+    window.open(letterUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Handle approval with confirmation
+  const handleApprove = (studentId, studentName) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to APPROVE the acceptance letter for ${studentName}?\n\n` +
+      `This will mark the student as verified and allow them to proceed with their internship.`
+    );
+
+    if (confirmed) {
+      // TODO: Replace with API call
+      // await acceptanceAPI.approve(studentId);
+
+      setMessage(`✅ Acceptance letter approved for ${studentName}`);
+      // Remove from pending list
+      setPendingStudents(prev => prev.filter(s => s._id !== studentId));
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  // Handle rejection initiation
+  const handleRejectInitiate = (student) => {
+    setSelectedStudentForRejection(student);
+    setShowRejectionModal(true);
+  };
+
+  // Handle rejection submission
+  const handleRejectSubmit = () => {
+    if (!rejectionReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+
+    const student = selectedStudentForRejection;
+
+    // TODO: Replace with API call
+    // await acceptanceAPI.reject(student._id, { reason: rejectionReason });
+
+    setMessage(`❌ Acceptance letter rejected for ${student.fullName}`);
+    setPendingStudents(prev => prev.filter(s => s._id !== student._id));
+
+    // Clean up
+    setShowRejectionModal(false);
+    setRejectionReason('');
+    setSelectedStudentForRejection(null);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  // Handle cancel rejection modal
+  const handleCancelRejection = () => {
+    setShowRejectionModal(false);
+    setRejectionReason('');
+    setSelectedStudentForRejection(null);
+  };
+
+  // Filter students by search query
+  const filterStudents = (students) => {
+    if (!searchQuery.trim()) return students;
+
+    const query = searchQuery.toLowerCase();
+    return students.filter(student =>
+      student.fullName.toLowerCase().includes(query) ||
+      student.email.toLowerCase().includes(query)
+    );
+  };
+
+  // Calculate summary statistics for accepted students tab
+  const getAcceptedStudentsStats = () => {
+    const total = acceptedStudents.length;
+    const thisWeek = acceptedStudents.filter(app => {
+      const accepted = new Date(app.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return accepted >= weekAgo;
+    }).length;
+
+    const withCompany = acceptedStudents.filter(app => app.companyName).length;
+    const avgDuration = acceptedStudents.length > 0
+      ? Math.round(
+          acceptedStudents.reduce((sum, app) => {
+            const months = parseInt(app.requestedDuration) || 0;
+            return sum + months;
+          }, 0) / acceptedStudents.length
+        )
+      : 0;
+
+    return { total, thisWeek, withCompany, avgDuration };
+  };
+
   // Helper function for grade color coding
   const getGradeClass = (grade) => {
     if (grade === 'A' || grade === 'A-') return 'grade-a';
@@ -234,7 +390,7 @@ const DeanDashboard = () => {
               fontSize: '16px'
             }}
           >
-            Pending Verifications ({pendingStudents.length})
+            Pending Verifications ({mockPendingAcceptance.length})
           </button>
           <button
             onClick={() => setActiveTab('accepted')}
@@ -269,59 +425,116 @@ const DeanDashboard = () => {
           </button>
         </div>
 
-        {/* PENDING STUDENTS TAB */}
+        {/* PENDING VERIFICATIONS TAB - Acceptance Letters */}
         {activeTab === 'pending' && (
-          <div className="card">
-            <h2>Pending Student Verifications</h2>
-            {pendingStudents.length === 0 ? (
-              <p>No pending student verifications.</p>
+          <div className="premium-evaluations-table">
+            {/* Header with Search Bar */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                Pending Acceptance Letter Verifications
+              </h2>
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid #E1E8ED',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  width: '280px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            {/* Table Content */}
+            {filterStudents(mockPendingAcceptance).length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                <p>{searchQuery.trim() ? 'No students match your search.' : 'No pending acceptance letters to verify.'}</p>
+              </div>
             ) : (
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>University</th>
-                      <th>Department</th>
-                      <th>Registration Date</th>
-                      <th>ID Card</th>
+                      <th>Student</th>
+                      <th>GPA</th>
+                      <th>Company</th>
+                      <th>Submitted Date</th>
+                      <th>Letter</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pendingStudents.map((student) => (
+                    {filterStudents(mockPendingAcceptance).map((student) => (
                       <tr key={student._id}>
-                        <td>{student.fullName}</td>
-                        <td>{student.email}</td>
-                        <td>{student.university}</td>
-                        <td>{student.department}</td>
-                        <td>{new Date(student.createdAt).toLocaleDateString()}</td>
+                        {/* Student Column with Avatar */}
                         <td>
-                          {student.idCardPath ? (
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={() => setSelectedIdCard(`${SERVER_URL}${student.idCardPath}`)}
+                          <div className="student-cell">
+                            <div
+                              className="student-avatar"
+                              style={{ background: getAvatarColor(student.fullName) }}
                             >
-                              View ID Card
-                            </button>
-                          ) : (
-                            <span>No ID Card</span>
-                          )}
+                              {getInitials(student.fullName)}
+                            </div>
+                            <div className="student-info">
+                              <div className="student-name">{student.fullName}</div>
+                              <div className="student-email">{student.email}</div>
+                            </div>
+                          </div>
                         </td>
+
+                        {/* GPA Column (Color-coded) */}
+                        <td>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            background: student.gpa >= 3.5 ? '#D4EDDA' : '#CCE0F5',
+                            color: student.gpa >= 3.5 ? '#155724' : '#004D8C'
+                          }}>
+                            {student.gpa.toFixed(2)}
+                          </span>
+                        </td>
+
+                        {/* Company Column */}
+                        <td>
+                          <strong>{student.companyName}</strong>
+                        </td>
+
+                        {/* Submitted Date */}
+                        <td>{new Date(student.submittedDate).toLocaleDateString()}</td>
+
+                        {/* Letter Column */}
+                        <td>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => handleViewLetter(student.acceptanceLetterUrl)}
+                            title="View acceptance letter"
+                          >
+                            📄 View Letter
+                          </button>
+                        </td>
+
+                        {/* Actions Column */}
                         <td>
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleVerify(student._id, 'approve')}
-                            style={{ marginRight: '10px' }}
+                            onClick={() => handleApprove(student._id, student.fullName)}
+                            style={{ marginRight: '8px' }}
+                            title="Approve acceptance letter"
                           >
-                            Verify
+                            ✓ Approve
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() => handleVerify(student._id, 'reject')}
+                            onClick={() => handleRejectInitiate(student)}
+                            title="Reject acceptance letter"
                           >
-                            Reject
+                            ✕ Reject
                           </button>
                         </td>
                       </tr>
@@ -333,65 +546,186 @@ const DeanDashboard = () => {
           </div>
         )}
 
-        {/* ACCEPTED STUDENTS TAB */}
+        {/* ACCEPTED STUDENTS TAB - Premium Design */}
         {activeTab === 'accepted' && (
-          <div className="card">
-            <h2>Accepted Students</h2>
-            <p style={{ color: '#666', marginBottom: '20px' }}>
-              Students who have been accepted for internships by the Admin
-            </p>
-            {acceptedStudents.length === 0 ? (
-              <p>No accepted students yet.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Student ID</th>
-                      <th>Student Name</th>
-                      <th>Department</th>
-                      <th>Company Name</th>
-                      <th>Duration</th>
-                      <th>Status</th>
-                      <th>Accepted Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {acceptedStudents.map((app) => (
-                      <tr key={app._id}>
-                        <td>{app.student?._id?.substring(0, 8)}...</td>
-                        <td>
-                          <strong>{app.student?.fullName}</strong>
-                          <br />
-                          <small style={{ color: '#666' }}>{app.student?.email}</small>
-                        </td>
-                        <td>{app.student?.department}</td>
-                        <td>
-                          {app.companyName || (
-                            <span style={{ color: '#999', fontStyle: 'italic' }}>Not Assigned</span>
-                          )}
-                        </td>
-                        <td>{app.requestedDuration}</td>
-                        <td>
-                          <span style={{
-                            padding: '6px 12px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            background: '#d4edda',
-                            color: '#155724'
-                          }}>
-                            ✓ Accepted
-                          </span>
-                        </td>
-                        <td>{new Date(app.createdAt).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <>
+            {/* Summary Cards Section */}
+            <div className="evaluations-summary-grid">
+              {/* Total Accepted */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon">
+                  👥
+                </div>
+                <div className="eval-card-label">Total Accepted</div>
+                <div className="eval-card-value">{getAcceptedStudentsStats().total}</div>
+                <div className="eval-card-sublabel">Students</div>
               </div>
-            )}
-          </div>
+
+              {/* This Week */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon success">
+                  📊
+                </div>
+                <div className="eval-card-label">This Week</div>
+                <div className="eval-card-value">{getAcceptedStudentsStats().thisWeek}</div>
+                <div className="eval-card-sublabel">New Acceptances</div>
+              </div>
+
+              {/* Placed (With Company) */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon info">
+                  🏢
+                </div>
+                <div className="eval-card-label">Placed</div>
+                <div className="eval-card-value">{getAcceptedStudentsStats().withCompany}</div>
+                <div className="eval-card-sublabel">With Companies</div>
+              </div>
+
+              {/* Average Duration */}
+              <div className="eval-summary-card">
+                <div className="eval-card-icon warning">
+                  ⏱️
+                </div>
+                <div className="eval-card-label">Avg Duration</div>
+                <div className="eval-card-value">{getAcceptedStudentsStats().avgDuration}</div>
+                <div className="eval-card-sublabel">Months</div>
+              </div>
+            </div>
+
+            {/* Premium Table */}
+            <div className="premium-evaluations-table">
+              {/* Header with Search Bar */}
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                  Accepted Students
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #E1E8ED',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    width: '280px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Table Content */}
+              {filterStudents(acceptedStudents.map(app => ({
+                _id: app._id,
+                fullName: app.student?.fullName || 'N/A',
+                email: app.student?.email || 'N/A',
+                ...app
+              }))).length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>{searchQuery.trim() ? 'No students match your search.' : 'No accepted students yet.'}</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Department</th>
+                        <th>Company</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterStudents(acceptedStudents.map(app => ({
+                        _id: app._id,
+                        fullName: app.student?.fullName || 'N/A',
+                        email: app.student?.email || 'N/A',
+                        ...app
+                      }))).map((app) => (
+                        <tr key={app._id}>
+                          {/* Student Column with Avatar */}
+                          <td>
+                            <div className="student-cell">
+                              <div
+                                className="student-avatar"
+                                style={{ background: getAvatarColor(app.student?.fullName || 'Unknown') }}
+                              >
+                                {getInitials(app.student?.fullName || 'Unknown')}
+                              </div>
+                              <div className="student-info">
+                                <div className="student-name">{app.student?.fullName || 'N/A'}</div>
+                                <div className="student-email">{app.student?.email || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Department */}
+                          <td>{app.student?.department || 'N/A'}</td>
+
+                          {/* Company */}
+                          <td>
+                            {app.companyName ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '18px' }}>🏢</span>
+                                <strong>{app.companyName}</strong>
+                              </div>
+                            ) : (
+                              <span style={{ color: '#999', fontStyle: 'italic' }}>Not Assigned</span>
+                            )}
+                          </td>
+
+                          {/* Duration */}
+                          <td>
+                            <span style={{
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              background: '#CCE0F5',
+                              color: '#004D8C'
+                            }}>
+                              {app.requestedDuration}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td>
+                            <span className="eval-status-badge completed">
+                              ✓ Accepted
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => alert(`View details for ${app.student?.fullName}\n\nCompany: ${app.companyName || 'Not Assigned'}\nDuration: ${app.requestedDuration}\nAccepted: ${new Date(app.createdAt).toLocaleDateString()}`)}
+                              style={{ marginRight: '8px' }}
+                              title="View student details"
+                            >
+                              👁️ View
+                            </button>
+                            {app.student?.email && (
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => window.location.href = `mailto:${app.student.email}`}
+                                title="Send email to student"
+                              >
+                                ✉️ Contact
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* EVALUATIONS TAB */}
@@ -720,6 +1054,116 @@ const DeanDashboard = () => {
                 <strong>Submission Date:</strong>{' '}
                 {new Date(selectedStudent.evaluation.submittedAt).toLocaleString()}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Reason Modal */}
+      {showRejectionModal && selectedStudentForRejection && (
+        <div
+          className="modal-overlay"
+          onClick={() => handleCancelRejection()}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              maxWidth: '600px',
+              width: '90%',
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            <h3 style={{ marginBottom: '20px', color: '#DC3545' }}>
+              Reject Acceptance Letter
+            </h3>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '8px 0', color: '#374151' }}>
+                <strong>Student:</strong> {selectedStudentForRejection.fullName}
+              </p>
+              <p style={{ margin: '8px 0', color: '#374151' }}>
+                <strong>Company:</strong> {selectedStudentForRejection.companyName}
+              </p>
+              <p style={{ margin: '8px 0', color: '#374151' }}>
+                <strong>GPA:</strong> {selectedStudentForRejection.gpa.toFixed(2)}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label htmlFor="rejectionReason" style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#1F2937' }}>
+                Rejection Reason *
+              </label>
+              <textarea
+                id="rejectionReason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please provide a clear reason for rejecting this acceptance letter..."
+                rows="5"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #E1E8ED',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  outline: 'none'
+                }}
+                autoFocus
+              />
+              <small style={{ color: '#6B7280', fontSize: '12px' }}>
+                {rejectionReason.length} characters
+              </small>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => handleCancelRejection()}
+                style={{
+                  padding: '10px 20px',
+                  background: '#6C757D',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRejectSubmit()}
+                style={{
+                  padding: '10px 20px',
+                  background: '#DC3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Confirm Rejection
+              </button>
             </div>
           </div>
         </div>
