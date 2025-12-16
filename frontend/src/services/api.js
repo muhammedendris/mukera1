@@ -95,6 +95,9 @@ export const reportsAPI = {
   upload: (formData) => api.post('/reports', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  update: (id, formData) => api.put(`/reports/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   getByApplication: (applicationId) => api.get(`/reports/application/${applicationId}`),
   getByStudent: (studentId) => api.get(`/reports/student/${studentId}`),
   getById: (id) => api.get(`/reports/${id}`),

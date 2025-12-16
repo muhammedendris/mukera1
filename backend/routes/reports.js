@@ -115,6 +115,95 @@ router.post(
   }
 );
 
+// @route   PUT /api/reports/:id
+// @desc    Update/Replace existing report (Student only)
+// @access  Private (Student)
+router.put(
+  '/:id',
+  isAuthenticated,
+  isStudent,
+  uploadReport,
+  handleMulterError,
+  [
+    body('title').optional().notEmpty().withMessage('Report title is required'),
+    body('description').optional().isLength({ min: 50 }).withMessage('Description must be at least 50 characters')
+  ],
+  async (req, res) => {
+    try {
+      // Validate input
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+
+      const { id } = req.params;
+      const { title, description } = req.body;
+
+      // Find the existing report
+      const report = await Report.findById(id).populate('application');
+
+      if (!report) {
+        return res.status(404).json({
+          success: false,
+          message: 'Report not found'
+        });
+      }
+
+      // Verify this is the student's report
+      if (report.student.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only update your own reports'
+        });
+      }
+
+      // Update fields if provided
+      if (title) report.title = title;
+      if (description) report.description = description;
+
+      // If a new file is uploaded, replace the old one
+      if (req.file) {
+        // Delete old file from filesystem
+        const fs = require('fs');
+        const path = require('path');
+
+        if (report.filePath && fs.existsSync(report.filePath)) {
+          try {
+            fs.unlinkSync(report.filePath);
+            console.log(`✅ Deleted old report file: ${report.filePath}`);
+          } catch (err) {
+            console.error('Failed to delete old file:', err);
+          }
+        }
+
+        // Update with new file path
+        report.filePath = req.file.path;
+      }
+
+      // Update upload date to reflect the change
+      report.uploadDate = new Date();
+
+      await report.save();
+
+      res.json({
+        success: true,
+        message: 'Report updated successfully',
+        report
+      });
+    } catch (error) {
+      console.error('Update report error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Server error',
+        error: error.message
+      });
+    }
+  }
+);
+
 // @route   GET /api/reports/application/:applicationId
 // @desc    Get all reports for an application
 // @access  Private
