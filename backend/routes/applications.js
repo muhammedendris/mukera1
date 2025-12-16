@@ -5,6 +5,7 @@ const Application = require('../models/Application');
 const User = require('../models/User');
 const { isAuthenticated, isStudent, isAdmin, isVerified, isDean } = require('../middleware/auth');
 const { updateStudentStatus, getAcceptedStudents } = require('../controllers/applicationController');
+const { assignAdvisor } = require('../controllers/advisorController');
 
 // @route   POST /api/applications
 // @desc    Submit internship application (Student only)
@@ -86,7 +87,7 @@ router.get('/', isAuthenticated, async (req, res) => {
       applications = await Application.find({ student: req.user._id })
         .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress internshipDurationWeeks rejectionReason')
         .populate('student', 'fullName email university department')
-        .populate('assignedAdvisor', 'fullName email')
+        .populate('assignedAdvisor', 'fullName email phone')
         .lean()
         .sort({ createdAt: -1 });
     } else if (req.user.role === 'company-admin') {
@@ -94,7 +95,7 @@ router.get('/', isAuthenticated, async (req, res) => {
       applications = await Application.find()
         .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress reviewedBy reviewedAt rejectionReason internshipDurationWeeks')
         .populate('student', 'fullName email university department')
-        .populate('assignedAdvisor', 'fullName email')
+        .populate('assignedAdvisor', 'fullName email phone')
         .populate('reviewedBy', 'fullName')
         .lean()
         .sort({ createdAt: -1 });
@@ -121,7 +122,7 @@ router.get('/', isAuthenticated, async (req, res) => {
       })
         .select('requestedDuration status assignedAdvisor createdAt')
         .populate('student', 'fullName email university department')
-        .populate('assignedAdvisor', 'fullName email')
+        .populate('assignedAdvisor', 'fullName email phone')
         .lean()
         .sort({ createdAt: -1 });
     } else {
@@ -195,97 +196,9 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 // @access  Private (Admin)
 router.patch('/:id/status', isAuthenticated, isAdmin, updateStudentStatus);
 
-// @route   PATCH /api/applications/:id/assign-advisor
+// @route   PATCH /api/applications/:applicationId/assign-advisor
 // @desc    Assign advisor to accepted application (Admin only)
 // @access  Private (Admin)
-router.patch('/:id/assign-advisor', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const { advisorId } = req.body;
-
-    if (!advisorId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Advisor ID is required'
-      });
-    }
-
-    // Check if advisor exists and has correct role
-    const advisor = await User.findOne({ _id: advisorId, role: 'advisor' });
-
-    if (!advisor) {
-      return res.status(404).json({
-        success: false,
-        message: 'Advisor not found'
-      });
-    }
-
-    const application = await Application.findById(req.params.id);
-
-    if (!application) {
-      return res.status(404).json({
-        success: false,
-        message: 'Application not found'
-      });
-    }
-
-    if (application.status !== 'accepted') {
-      return res.status(400).json({
-        success: false,
-        message: 'Can only assign advisor to accepted applications'
-      });
-    }
-
-    application.assignedAdvisor = advisorId;
-    await application.save();
-
-    // Update pending messages with advisor as receiver
-    const Chat = require('../models/Chat');
-    const updateResult = await Chat.updateMany(
-      {
-        application: req.params.id,
-        isPendingAdvisorAssignment: true,
-        receiver: null
-      },
-      {
-        $set: {
-          receiver: advisorId,
-          isPendingAdvisorAssignment: false
-        }
-      }
-    ).maxTimeMS(5000);
-
-    console.log(`✅ Advisor assigned. Updated ${updateResult.modifiedCount} pending messages`);
-
-    // Emit Socket.io event to notify connected clients
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`chat-${req.params.id}`).emit('advisor-assigned', {
-        applicationId: req.params.id,
-        advisorId: advisorId,
-        advisor: {
-          _id: advisor._id,
-          fullName: advisor.fullName,
-          email: advisor.email,
-          role: advisor.role
-        },
-        pendingMessagesCount: updateResult.modifiedCount
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Advisor assigned successfully',
-      application,
-      updatedMessagesCount: updateResult.modifiedCount
-    });
-  } catch (error) {
-    console.error('Assign advisor error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
-  }
-});
+router.patch('/:applicationId/assign-advisor', isAuthenticated, isAdmin, assignAdvisor);
 
 module.exports = router;

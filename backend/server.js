@@ -44,6 +44,7 @@ const chatRoutes = require('./routes/chats');
 const evaluationRoutes = require('./routes/evaluations');
 const reportRoutes = require('./routes/reports');
 const contactRoutes = require('./routes/contact');
+const studentRoutes = require('./routes/students');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -54,6 +55,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/students', studentRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
