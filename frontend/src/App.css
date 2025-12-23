@@ -1025,9 +1025,7 @@ html.dark .dashboard {
   padding-top: 80px; /* Space for navbar */
 }
 
-.dashboard-container {
-  margin-top: 80px;
-}
+/* .dashboard-container margin removed - .dashboard .container already has padding-top: 80px */
 
 .dashboard-header {
   display: flex;
