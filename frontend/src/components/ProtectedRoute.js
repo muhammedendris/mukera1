@@ -5,8 +5,31 @@ import { useAuth } from '../context/AuthContext';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
+  // Show loading spinner while checking authentication
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="dashboard">
+        <div className="container" style={{ paddingTop: '120px', textAlign: 'center' }}>
+          <div style={{
+            display: 'inline-block',
+            width: '50px',
+            height: '50px',
+            border: '4px solid #E5E7EB',
+            borderTopColor: '#0060AA',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{ marginTop: '20px', color: '#6B7280', fontSize: '16px' }}>
+            Verifying authentication...
+          </p>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -16,10 +39,18 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
       <div className="dashboard">
-        <div className="container">
-          <div className="alert alert-error">
-            <h2>Access Denied</h2>
-            <p>You do not have permission to access this page.</p>
+        <div className="container" style={{ paddingTop: '120px' }}>
+          <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px', color: '#DC3545' }}>
+              🚫
+            </div>
+            <h2 style={{ marginBottom: '16px', color: '#DC3545' }}>Access Denied</h2>
+            <p style={{ color: '#6B7280', marginBottom: '20px' }}>
+              You do not have permission to access this page.
+            </p>
+            <a href="/dashboard" className="btn btn-primary">
+              Go to Dashboard
+            </a>
           </div>
         </div>
       </div>
