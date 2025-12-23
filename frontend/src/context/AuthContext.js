@@ -14,7 +14,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(sessionStorage.getItem('token'));
 
   useEffect(() => {
     const loadUser = async () => {
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data.user);
         } catch (error) {
           console.error('Failed to load user:', error);
-          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
           setToken(null);
         }
       }
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       const { token, user } = response.data;
-      localStorage.setItem('token', token);
+      sessionStorage.setItem('token', token);
       setToken(token);
       setUser(user);
       return { success: true, user };
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setToken(null);
     setUser(null);
   };

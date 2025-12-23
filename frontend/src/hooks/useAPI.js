@@ -11,7 +11,7 @@ export const useAPI = () => {
     setLoading(true);
     setError(null);
 
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const headers = {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -79,7 +79,7 @@ export const useProfile = () => {
       const response = await fetch(`${API_URL}/users/avatar`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: formData,
       });
@@ -211,7 +211,7 @@ export const useReports = (applicationId) => {
       const response = await fetch(`${API_URL}/reports`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: formData,
       });
@@ -384,7 +384,7 @@ export const useChat = () => {
       const response = await fetch(`${API_URL}/chats/${chatId}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: formData,
       });
@@ -515,7 +515,7 @@ export const useDebounce = (value, delay = 500) => {
 export const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = window.sessionStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.error(error);
@@ -527,7 +527,7 @@ export const useLocalStorage = (key, initialValue) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
       console.error(error);
     }

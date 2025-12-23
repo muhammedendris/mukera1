@@ -121,7 +121,7 @@ const DeanDashboard = () => {
 
   const loadAcceptedStudents = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api'}/applications/accepted-students`,
         {

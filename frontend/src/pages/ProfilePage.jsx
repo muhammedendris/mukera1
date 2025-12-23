@@ -25,7 +25,7 @@ const ProfilePage = () => {
     try {
       const response = await fetch(`${API_URL}/users/profile`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       const data = await response.json();
@@ -44,7 +44,7 @@ const ProfilePage = () => {
       const response = await fetch(`${API_URL}/users/avatar`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: formData,
       });
@@ -63,7 +63,7 @@ const ProfilePage = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: JSON.stringify(formData),
       });
