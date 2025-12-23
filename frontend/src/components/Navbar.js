@@ -41,7 +41,7 @@ const Navbar = () => {
             </div>
             {!isAuthenticated && (
               <div className="auth-buttons auth-buttons-left">
-                <Link to="/login" className="btn btn-outline nav-btn" onClick={closeMobileMenu}>
+                <Link to="/login" className="btn btn-primary nav-btn" onClick={closeMobileMenu}>
                   Login
                 </Link>
                 <Link to="/register" className="btn btn-primary nav-btn" onClick={closeMobileMenu}>
@@ -71,7 +71,7 @@ const Navbar = () => {
                 <Link to="/contact" className="nav-link" onClick={closeMobileMenu}>Contact</Link>
                 {/* Auth buttons for DESKTOP (between Contact and Theme) */}
                 <div className="auth-buttons auth-buttons-right">
-                  <Link to="/login" className="btn btn-outline nav-btn" onClick={closeMobileMenu}>
+                  <Link to="/login" className="btn btn-primary nav-btn" onClick={closeMobileMenu}>
                     Login
                   </Link>
                   <Link to="/register" className="btn btn-primary nav-btn" onClick={closeMobileMenu}>
