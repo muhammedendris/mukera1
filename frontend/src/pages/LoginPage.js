@@ -1,39 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../App.css';
 
-const LoginPage = () => {
+const LoginPage = memo(() => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({
-    email: '',
-    password: ''
-  });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     setError('');
-    // Clear field error when user starts typing
-    if (fieldErrors[e.target.name]) {
-      setFieldErrors({
-        ...fieldErrors,
-        [e.target.name]: ''
-      });
-    }
-  };
+    setFieldErrors(prev => {
+      if (prev[name]) {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      }
+      return prev;
+    });
+  }, []);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const errors = {};
     let isValid = true;
 
@@ -52,12 +50,11 @@ const LoginPage = () => {
 
     setFieldErrors(errors);
     return isValid;
-  };
+  }, [formData.email, formData.password]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
-    // Validate form first
+
     if (!validateForm()) {
       return;
     }
@@ -65,16 +62,20 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(formData);
+    try {
+      const result = await login(formData);
 
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.message);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  };
+  }, [formData, login, navigate, validateForm]);
 
   return (
     <div className="auth-page">

@@ -232,6 +232,16 @@
     border-bottom: 1px solid var(--color-border);
     height: auto;
     justify-content: flex-start;
+    color: var(--color-text-primary); /* Dark text in light mode, light text in dark mode */
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary); /* Primary blue on hover */
+  }
+
+  /* User info text also needs proper color on mobile */
+  .user-info {
+    color: var(--color-text-primary);
   }
 
   .nav-link:last-of-type {
@@ -241,10 +251,6 @@
   /* Remove underline hover effect on mobile */
   .nav-link::after {
     display: none;
-  }
-
-  .nav-link:hover {
-    background: var(--color-hover);
   }
 
   /* Full-width buttons on mobile */
