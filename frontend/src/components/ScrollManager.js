@@ -5,13 +5,8 @@ const ScrollManager = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Prevent automatic scroll restoration
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-
-    // Don't auto-scroll to top on route change
-    // User can scroll manually if needed
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
