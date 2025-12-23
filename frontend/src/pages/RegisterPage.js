@@ -25,7 +25,6 @@ const RegisterPage = () => {
     university: '',
     department: '',
     phone: '',
-    address: '',
     idCard: null
   });
 
@@ -85,6 +84,14 @@ const RegisterPage = () => {
       return;
     }
 
+    // Name Validation - Only letters and spaces allowed
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(formData.fullName.trim())) {
+      setError('Name must contain letters only. Numbers and special characters are not allowed.');
+      setLoading(false);
+      return;
+    }
+
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -107,7 +114,6 @@ const RegisterPage = () => {
     data.append('university', formData.university);
     data.append('department', formData.department);
     data.append('phone', formData.phone);
-    data.append('address', formData.address);
     data.append('idCard', formData.idCard);
 
     const result = await register(data);
@@ -379,20 +385,6 @@ const RegisterPage = () => {
                     onChange={handleChange}
                     placeholder="phone number"
                   />
-                </div>
-
-                {/* Address */}
-                <div className="form-group">
-                  <label htmlFor="address">Address</label>
-                  <textarea
-                    id="address"
-                    name="address"
-                    className="form-control"
-                    value={formData.address}
-                    onChange={handleChange}
-                    rows="2"
-                    placeholder="Your address"
-                  ></textarea>
                 </div>
 
                 {/* ID Card Upload */}
