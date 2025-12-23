@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
+import Toast from '../components/Toast';
 import '../App.css';
 
 // Helper function to generate random numbers for Math CAPTCHA
@@ -180,6 +181,24 @@ const RegisterPage = () => {
 
   return (
     <div className="auth-page">
+      {/* Toast Notifications */}
+      {error && (
+        <Toast
+          message={error}
+          type="error"
+          onClose={() => setError('')}
+          duration={5000}
+        />
+      )}
+      {success && (
+        <Toast
+          message={success}
+          type="success"
+          onClose={() => setSuccess('')}
+          duration={5000}
+        />
+      )}
+
       <div className="container">
         <div className="auth-container">
           <div className="auth-card register-card">
@@ -191,18 +210,6 @@ const RegisterPage = () => {
                 ? 'Join our internship program'
                 : `Enter the verification code sent to ${registeredEmail}`}
             </p>
-
-            {error && (
-              <div className="alert alert-error">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="alert alert-success">
-                {success}
-              </div>
-            )}
 
             {step === 1 ? (
               <form onSubmit={handleRegisterSubmit} className="auth-form">
