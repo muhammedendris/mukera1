@@ -307,7 +307,7 @@ const DeanDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="container">
+      <div className="container dashboard-container">
         <h1>Dean Dashboard</h1>
         <p className="dashboard-subtitle">Welcome, {user.fullName}</p>
         <p>University: {user.university} | Department: {user.department}</p>

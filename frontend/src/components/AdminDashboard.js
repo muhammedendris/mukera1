@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, applicationsAPI, advisorsAPI } from '../services/api';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedIdCard, setSelectedIdCard] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Cover Letter Modal State
   const [showCoverLetterModal, setShowCoverLetterModal] = useState(false);
@@ -27,6 +29,58 @@ const AdminDashboard = () => {
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
+
+  // Helper functions
+  const getInitials = (fullName) => {
+    if (!fullName) return '?';
+    const parts = fullName.trim().split(' ');
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const getAvatarColor = (fullName) => {
+    if (!fullName) return '#0060AA';
+    const hash = fullName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = ['#0060AA', '#28A745', '#17A2B8', '#6C757D', '#FFC107', '#DC3545'];
+    return colors[hash % colors.length];
+  };
+
+  const getPendingDeansStats = () => {
+    const total = pendingDeans.length;
+    const thisWeek = pendingDeans.filter(dean => {
+      const created = new Date(dean.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return created >= weekAgo;
+    }).length;
+    return { total, thisWeek };
+  };
+
+  const getApplicationsStats = () => {
+    const total = applications.length;
+    const pending = applications.filter(app => app.status === 'pending').length;
+    const accepted = applications.filter(app => app.status === 'accepted').length;
+    const rejected = applications.filter(app => app.status === 'rejected').length;
+    return { total, pending, accepted, rejected };
+  };
+
+  const getAdvisorsStats = () => {
+    const total = advisors.length;
+    const withAssignments = advisors.filter(adv => adv.assignedApplications && adv.assignedApplications.length > 0).length;
+    return { total, withAssignments };
+  };
+
+  const filterBySearch = (items, searchFields) => {
+    if (!searchQuery.trim()) return items;
+
+    const query = searchQuery.toLowerCase();
+    return items.filter(item =>
+      searchFields.some(field => {
+        const value = field.split('.').reduce((obj, key) => obj?.[key], item);
+        return value?.toString().toLowerCase().includes(query);
+      })
+    );
+  };
 
   useEffect(() => {
     loadData();
@@ -141,325 +195,574 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="container">
+      <div className="container dashboard-container">
         <h1>Admin Dashboard</h1>
         <p className="dashboard-subtitle">Welcome, {user.fullName}</p>
 
         {message && <div className="alert alert-success">{message}</div>}
 
-        {/* Tabs */}
-        <div className="tabs">
+        {/* Tab Navigation */}
+        <div style={{ marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
           <button
-            className={`tab-button ${activeTab === 'deans' ? 'active' : ''}`}
             onClick={() => setActiveTab('deans')}
+            style={{
+              padding: '12px 24px',
+              marginRight: '10px',
+              border: 'none',
+              borderBottom: activeTab === 'deans' ? '3px solid #0060AA' : 'none',
+              background: 'transparent',
+              color: activeTab === 'deans' ? '#0060AA' : '#666',
+              fontWeight: activeTab === 'deans' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
           >
-            Pending Deans
+            Pending Deans ({pendingDeans.length})
           </button>
           <button
-            className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
             onClick={() => setActiveTab('applications')}
+            style={{
+              padding: '12px 24px',
+              marginRight: '10px',
+              border: 'none',
+              borderBottom: activeTab === 'applications' ? '3px solid #0060AA' : 'none',
+              background: 'transparent',
+              color: activeTab === 'applications' ? '#0060AA' : '#666',
+              fontWeight: activeTab === 'applications' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
           >
-            Applications
+            Applications ({applications.length})
           </button>
           <button
-            className={`tab-button ${activeTab === 'advisors' ? 'active' : ''}`}
             onClick={() => setActiveTab('advisors')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              borderBottom: activeTab === 'advisors' ? '3px solid #0060AA' : 'none',
+              background: 'transparent',
+              color: activeTab === 'advisors' ? '#0060AA' : '#666',
+              fontWeight: activeTab === 'advisors' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
           >
-            Manage Advisors
+            Manage Advisors ({advisors.length})
           </button>
         </div>
 
         {/* Pending Deans Tab */}
         {activeTab === 'deans' && (
-          <div className="card">
-            <h2>Pending Dean Verifications</h2>
-            {loading ? (
-              <p>Loading...</p>
-            ) : pendingDeans.length === 0 ? (
-              <p>No pending dean verifications.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>University</th>
-                      <th>Department</th>
-                      <th>ID Card</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingDeans.map((dean) => (
-                      <tr key={dean._id}>
-                        <td>{dean.fullName}</td>
-                        <td>{dean.email}</td>
-                        <td>{dean.university}</td>
-                        <td>{dean.department}</td>
-                        <td>
-                          {dean.idCardPath ? (
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={() => setSelectedIdCard(`${SERVER_URL}${dean.idCardPath}`)}
-                            >
-                              View ID Card
-                            </button>
-                          ) : (
-                            <span>No ID Card</span>
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleVerifyDean(dean._id, 'approve')}
-                            style={{ marginRight: '10px' }}
-                          >
-                            Verify
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleVerifyDean(dean._id, 'reject')}
-                          >
-                            Reject
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <>
+            {/* Summary Cards */}
+            <div className="evaluations-summary-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              <div className="eval-summary-card">
+                <div className="eval-card-icon">
+                  👥
+                </div>
+                <div className="eval-card-label">Total Pending</div>
+                <div className="eval-card-value">{getPendingDeansStats().total}</div>
+                <div className="eval-card-sublabel">Deans Awaiting Verification</div>
               </div>
-            )}
-          </div>
+
+              <div className="eval-summary-card">
+                <div className="eval-card-icon success">
+                  📊
+                </div>
+                <div className="eval-card-label">This Week</div>
+                <div className="eval-card-value">{getPendingDeansStats().thisWeek}</div>
+                <div className="eval-card-sublabel">New Registrations</div>
+              </div>
+            </div>
+
+            {/* Premium Table */}
+            <div className="premium-evaluations-table">
+              {/* Header with Search */}
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                  Pending Dean Verifications
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #E1E8ED',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    width: '280px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Table Content */}
+              {loading ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>Loading...</p>
+                </div>
+              ) : filterBySearch(pendingDeans, ['fullName', 'email']).length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>{searchQuery.trim() ? 'No deans match your search.' : 'No pending dean verifications.'}</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Dean</th>
+                        <th>University</th>
+                        <th>Department</th>
+                        <th>Registration Date</th>
+                        <th>ID Card</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterBySearch(pendingDeans, ['fullName', 'email']).map((dean) => (
+                        <tr key={dean._id}>
+                          {/* Dean Column with Avatar */}
+                          <td>
+                            <div className="student-cell">
+                              <div
+                                className="student-avatar"
+                                style={{ background: getAvatarColor(dean.fullName) }}
+                              >
+                                {getInitials(dean.fullName)}
+                              </div>
+                              <div className="student-info">
+                                <div className="student-name">{dean.fullName}</div>
+                                <div className="student-email">{dean.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{dean.university}</td>
+                          <td>{dean.department}</td>
+                          <td>{new Date(dean.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            {dean.idCardPath ? (
+                              <button
+                                className="btn btn-info btn-sm"
+                                onClick={() => setSelectedIdCard(`${SERVER_URL}${dean.idCardPath}`)}
+                              >
+                                📄 View ID
+                              </button>
+                            ) : (
+                              <span style={{ color: '#999' }}>No ID Card</span>
+                            )}
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleVerifyDean(dean._id, 'approve')}
+                              style={{ marginRight: '8px' }}
+                            >
+                              ✓ Verify
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleVerifyDean(dean._id, 'reject')}
+                            >
+                              ✕ Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* Applications Tab */}
         {activeTab === 'applications' && (
-          <div className="card">
-            <h2>Student Applications</h2>
-            {loading ? (
-              <p>Loading...</p>
-            ) : applications.length === 0 ? (
-              <p>No applications yet.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Student</th>
-                      <th>University</th>
-                      <th>Duration</th>
-                      <th>Status</th>
-                      <th>Cover Letter</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((app) => (
-                      <tr key={app._id}>
-                        <td>{app.student?.fullName}</td>
-                        <td>{app.student?.university}</td>
-                        <td>{app.requestedDuration}</td>
-                        <td>
-                          <span className={`status-badge status-${app.status}`}>
-                            {app.status}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-info btn-sm"
-                            onClick={() => {
-                              setSelectedCoverLetter(app.coverLetter);
-                              setShowCoverLetterModal(true);
-                            }}
-                          >
-                            View Cover Letter
-                          </button>
-                        </td>
-                        <td>
-                          {app.status === 'pending' && (
-                            <>
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleAcceptApplication(app._id)}
-                                style={{ marginRight: '5px' }}
-                              >
-                                Accept
-                              </button>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleRejectApplication(app._id)}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                          {app.status === 'accepted' && (
-                            <div>
-                              <select
-                                className="form-control"
-                                onChange={(e) => {
-                                  if (e.target.value) {
-                                    handleAssignAdvisor(app._id, e.target.value);
-                                  }
-                                }}
-                                value={app.assignedAdvisor?._id || ""}
-                              >
-                                <option value="">Select Advisor</option>
-                                {advisors.map((advisor) => (
-                                  <option key={advisor._id} value={advisor._id}>
-                                    {advisor.fullName}
-                                  </option>
-                                ))}
-                              </select>
-                              {app.assignedAdvisor && (
-                                <small className="text-muted d-block mt-1">
-                                  Current: {app.assignedAdvisor.fullName}
-                                </small>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <>
+            {/* Summary Cards */}
+            <div className="evaluations-summary-grid">
+              <div className="eval-summary-card">
+                <div className="eval-card-icon">
+                  📋
+                </div>
+                <div className="eval-card-label">Total Applications</div>
+                <div className="eval-card-value">{getApplicationsStats().total}</div>
+                <div className="eval-card-sublabel">All Submissions</div>
               </div>
-            )}
-          </div>
+
+              <div className="eval-summary-card">
+                <div className="eval-card-icon warning">
+                  ⏳
+                </div>
+                <div className="eval-card-label">Pending Review</div>
+                <div className="eval-card-value">{getApplicationsStats().pending}</div>
+                <div className="eval-card-sublabel">Awaiting Decision</div>
+              </div>
+
+              <div className="eval-summary-card">
+                <div className="eval-card-icon success">
+                  ✓
+                </div>
+                <div className="eval-card-label">Accepted</div>
+                <div className="eval-card-value">{getApplicationsStats().accepted}</div>
+                <div className="eval-card-sublabel">Approved Applications</div>
+              </div>
+
+              <div className="eval-summary-card">
+                <div className="eval-card-icon danger">
+                  ✕
+                </div>
+                <div className="eval-card-label">Rejected</div>
+                <div className="eval-card-value">{getApplicationsStats().rejected}</div>
+                <div className="eval-card-sublabel">Declined Applications</div>
+              </div>
+            </div>
+
+            {/* Premium Table */}
+            <div className="premium-evaluations-table">
+              {/* Header with Search */}
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                  Student Applications
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Search by student name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #E1E8ED',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    width: '280px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Table Content */}
+              {loading ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>Loading...</p>
+                </div>
+              ) : filterBySearch(applications, ['student.fullName', 'student.email']).length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>{searchQuery.trim() ? 'No applications match your search.' : 'No applications yet.'}</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>University</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Cover Letter</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterBySearch(applications, ['student.fullName', 'student.email']).map((app) => (
+                        <tr key={app._id}>
+                          {/* Student Column with Avatar */}
+                          <td>
+                            <div className="student-cell">
+                              <div
+                                className="student-avatar"
+                                style={{ background: getAvatarColor(app.student?.fullName || 'Unknown') }}
+                              >
+                                {getInitials(app.student?.fullName || 'Unknown')}
+                              </div>
+                              <div className="student-info">
+                                <div className="student-name">{app.student?.fullName || 'N/A'}</div>
+                                <div className="student-email">{app.student?.email || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{app.student?.university || 'N/A'}</td>
+                          <td>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '6px',
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              background: '#CCE0F5',
+                              color: '#004D8C'
+                            }}>
+                              {app.requestedDuration}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`eval-status-badge ${app.status}`}>
+                              {app.status === 'accepted' && '✓ Accepted'}
+                              {app.status === 'rejected' && '✕ Rejected'}
+                              {app.status === 'pending' && '⏳ Pending'}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() => {
+                                setSelectedCoverLetter(app.coverLetter);
+                                setShowCoverLetterModal(true);
+                              }}
+                            >
+                              📄 View
+                            </button>
+                          </td>
+                          <td>
+                            {app.status === 'pending' && (
+                              <>
+                                <button
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => handleAcceptApplication(app._id)}
+                                  style={{ marginRight: '8px' }}
+                                >
+                                  ✓ Accept
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleRejectApplication(app._id)}
+                                >
+                                  ✕ Reject
+                                </button>
+                              </>
+                            )}
+                            {app.status === 'accepted' && (
+                              <div>
+                                <select
+                                  className="form-control"
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleAssignAdvisor(app._id, e.target.value);
+                                    }
+                                  }}
+                                  value={app.assignedAdvisor?._id || ""}
+                                  style={{ fontSize: '13px', padding: '6px' }}
+                                >
+                                  <option value="">Assign Advisor</option>
+                                  {advisors.map((advisor) => (
+                                    <option key={advisor._id} value={advisor._id}>
+                                      {advisor.fullName}
+                                    </option>
+                                  ))}
+                                </select>
+                                {app.assignedAdvisor && (
+                                  <small style={{ color: '#6B7280', fontSize: '11px', display: 'block', marginTop: '4px' }}>
+                                    Current: {app.assignedAdvisor.fullName}
+                                  </small>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* Advisors Tab */}
         {activeTab === 'advisors' && (
-          <div className="card">
-            <h2>Manage Advisors</h2>
+          <>
+            {/* Summary Cards */}
+            <div className="evaluations-summary-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              <div className="eval-summary-card">
+                <div className="eval-card-icon info">
+                  👨‍🏫
+                </div>
+                <div className="eval-card-label">Total Advisors</div>
+                <div className="eval-card-value">{getAdvisorsStats().total}</div>
+                <div className="eval-card-sublabel">Registered Advisors</div>
+              </div>
 
-            <div className="create-advisor-form">
-              <h3>Create New Advisor</h3>
-              <form onSubmit={handleCreateAdvisor}>
-                <div className="form-row">
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Full Name"
-                      value={newAdvisor.fullName}
-                      onChange={(e) => setNewAdvisor({ ...newAdvisor, fullName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <input
-                      type="email"
-                      className="form-control"
-                      placeholder="Email"
-                      value={newAdvisor.email}
-                      onChange={(e) => setNewAdvisor({ ...newAdvisor, email: e.target.value })}
-                      required
-                    />
-                  </div>
+              <div className="eval-summary-card">
+                <div className="eval-card-icon success">
+                  📚
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <input
-                      type="password"
-                      className="form-control"
-                      placeholder="Password"
-                      value={newAdvisor.password}
-                      onChange={(e) => setNewAdvisor({ ...newAdvisor, password: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <input
-                      type="tel"
-                      className="form-control"
-                      placeholder="Phone"
-                      value={newAdvisor.phone}
-                      onChange={(e) => setNewAdvisor({ ...newAdvisor, phone: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="btn btn-primary">Create Advisor</button>
-              </form>
+                <div className="eval-card-label">Active Advisors</div>
+                <div className="eval-card-value">{getAdvisorsStats().withAssignments}</div>
+                <div className="eval-card-sublabel">With Assignments</div>
+              </div>
             </div>
 
-            <h3 className="mt-3">All Advisors</h3>
-            {loading ? (
-              <p>Loading...</p>
-            ) : advisors.length === 0 ? (
-              <p>No advisors yet.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {advisors.map((advisor) => (
-                      <tr key={advisor._id}>
-                        <td>{advisor.fullName}</td>
-                        <td>{advisor.email}</td>
-                        <td>{advisor.phone || 'N/A'}</td>
-                        <td>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDeleteAdvisor(advisor._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Create Advisor Form in Premium Card */}
+            <div className="premium-evaluations-table" style={{ marginBottom: '24px' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                  Create New Advisor
+                </h2>
               </div>
-            )}
-          </div>
+              <div style={{ padding: '24px' }}>
+                <form onSubmit={handleCreateAdvisor}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Full Name"
+                        value={newAdvisor.fullName}
+                        onChange={(e) => setNewAdvisor({ ...newAdvisor, fullName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="Email"
+                        value={newAdvisor.email}
+                        onChange={(e) => setNewAdvisor({ ...newAdvisor, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <input
+                        type="password"
+                        className="form-control"
+                        placeholder="Password"
+                        value={newAdvisor.password}
+                        onChange={(e) => setNewAdvisor({ ...newAdvisor, password: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <input
+                        type="tel"
+                        className="form-control"
+                        placeholder="Phone"
+                        value={newAdvisor.phone}
+                        onChange={(e) => setNewAdvisor({ ...newAdvisor, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn btn-primary">
+                    ✨ Create Advisor
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Advisors List Table */}
+            <div className="premium-evaluations-table">
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #E1E8ED', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1F2937' }}>
+                  Advisors List
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Search advisors..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #E1E8ED',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    width: '280px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {loading ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>Loading...</p>
+                </div>
+              ) : filterBySearch(advisors, ['fullName', 'email']).length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <p>{searchQuery.trim() ? 'No advisors match your search.' : 'No advisors yet.'}</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Advisor</th>
+                        <th>Phone</th>
+                        <th>Assignments</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterBySearch(advisors, ['fullName', 'email']).map((advisor) => (
+                        <tr key={advisor._id}>
+                          <td>
+                            <div className="student-cell">
+                              <div
+                                className="student-avatar"
+                                style={{ background: getAvatarColor(advisor.fullName) }}
+                              >
+                                {getInitials(advisor.fullName)}
+                              </div>
+                              <div className="student-info">
+                                <div className="student-name">{advisor.fullName}</div>
+                                <div className="student-email">{advisor.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{advisor.phone || 'N/A'}</td>
+                          <td>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '6px',
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              background: '#CCE0F5',
+                              color: '#004D8C'
+                            }}>
+                              {advisor.assignedApplications?.length || 0} Students
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDeleteAdvisor(advisor._id)}
+                            >
+                              🗑️ Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 
       {/* Cover Letter Modal */}
       {showCoverLetterModal && (
         <div
-          className="modal-overlay"
+          className="premium-modal"
           onClick={() => setShowCoverLetterModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
         >
           <div
-            className="modal-content"
+            className="premium-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              minWidth: '500px',
-              maxWidth: '800px',
-              maxHeight: '80vh',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#0060AA' }}>
-              Student Cover Letter
-            </h3>
+            <button
+              onClick={() => setShowCoverLetterModal(false)}
+              className="premium-close-btn"
+            >
+              Close
+            </button>
+
+            <div className="premium-modal-header">
+              <h2>Student Cover Letter</h2>
+            </div>
 
             <div style={{
               flex: 1,
@@ -467,31 +770,14 @@ const AdminDashboard = () => {
               whiteSpace: 'pre-wrap',
               padding: '20px',
               backgroundColor: '#f8f9fa',
-              borderRadius: '4px',
+              borderRadius: '8px',
               marginBottom: '20px',
               border: '1px solid #dee2e6',
               lineHeight: '1.6',
-              fontSize: '14px'
+              fontSize: '14px',
+              maxHeight: '60vh'
             }}>
               {selectedCoverLetter}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowCoverLetterModal(false)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
@@ -500,43 +786,31 @@ const AdminDashboard = () => {
       {/* Rejection Modal */}
       {showRejectModal && (
         <div
-          className="modal-overlay"
+          className="premium-modal"
           onClick={() => setShowRejectModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
         >
           <div
-            className="modal-content"
+            className="premium-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              minWidth: '500px',
-              maxWidth: '600px'
-            }}
+            style={{ maxWidth: '600px' }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#dc3545' }}>
-              Reject Application
-            </h3>
+            <button
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectionReason('');
+              }}
+              className="premium-close-btn"
+            >
+              Close
+            </button>
 
-            <p style={{ marginBottom: '15px', color: '#666' }}>
-              Please provide a reason for rejecting this application. This will be sent to the student via email.
-            </p>
+            <div className="premium-modal-header">
+              <h2 style={{ color: '#dc3545' }}>Reject Application</h2>
+              <p>Please provide a reason for rejecting this application. This will be sent to the student via email.</p>
+            </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#1F2937' }}>
                 Rejection Reason *
               </label>
               <textarea
@@ -547,12 +821,13 @@ const AdminDashboard = () => {
                 placeholder="Example: We regret to inform you that your application did not meet our current requirements. We encourage you to gain more experience in relevant areas and apply again in the future."
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ced4da',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #E1E8ED',
                   fontSize: '14px',
                   resize: 'vertical',
-                  minHeight: '100px'
+                  minHeight: '100px',
+                  outline: 'none'
                 }}
               />
             </div>
@@ -569,9 +844,10 @@ const AdminDashboard = () => {
                   background: '#6c757d',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}
               >
                 Cancel
@@ -585,9 +861,10 @@ const AdminDashboard = () => {
                   background: rejectionReason.trim() ? '#dc3545' : '#cccccc',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   cursor: rejectionReason.trim() ? 'pointer' : 'not-allowed',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}
               >
                 Confirm Rejection
@@ -600,65 +877,41 @@ const AdminDashboard = () => {
       {/* ID Card Modal */}
       {selectedIdCard && (
         <div
-          className="modal-overlay"
+          className="premium-modal"
           onClick={() => setSelectedIdCard(null)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
         >
           <div
-            className="modal-content"
+            className="premium-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              maxWidth: '90%',
-              maxHeight: '90vh',
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}
           >
             <button
               onClick={() => setSelectedIdCard(null)}
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '8px 16px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
+              className="premium-close-btn"
             >
               Close
             </button>
-            <h3 style={{ marginBottom: '15px' }}>ID Card</h3>
-            <img
-              src={selectedIdCard}
-              alt="ID Card"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '70vh',
-                objectFit: 'contain'
-              }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML += '<p style="color: red;">Failed to load image. Please check if the file exists on the server.</p>';
-              }}
-            />
+
+            <div className="premium-modal-header">
+              <h2>Dean ID Card</h2>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <img
+                src={selectedIdCard}
+                alt="ID Card"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML += '<p style="color: #dc3545; padding: 20px;">Failed to load image. Please check if the file exists on the server.</p>';
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

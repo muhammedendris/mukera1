@@ -58,7 +58,7 @@ const AdvisorDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="container">
+      <div className="container dashboard-container">
         <h1>Advisor Dashboard</h1>
         <p className="dashboard-subtitle">Welcome, {user.fullName}</p>
 
