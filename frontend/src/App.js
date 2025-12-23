@@ -17,6 +17,9 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
+const HelpCenterPage = lazy(() => import('./pages/HelpCenterPage'));
 
 // Loading component
 const PageLoader = () => (
@@ -92,6 +95,11 @@ function App() {
 
                   {/* Analytics Dashboard - Public for demo */}
                   <Route path="/analytics" element={<AnalyticsPage />} />
+
+                  {/* Legal and Help Pages */}
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                  <Route path="/help-center" element={<HelpCenterPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<Navigate to="/" replace />} />

@@ -34,16 +34,16 @@ const Footer = () => {
 
             <div className="footer-column">
               <h4 className="footer-column-title">Legal</h4>
-              <Link to="/privacy" className="footer-link">Privacy Policy</Link>
-              <Link to="/terms" className="footer-link">Terms of Service</Link>
+              <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
+              <Link to="/terms-of-service" className="footer-link">Terms of Service</Link>
             </div>
 
             <div className="footer-column">
               <h4 className="footer-column-title">Support</h4>
-              <a href="mailto:support@internshipportal.com" className="footer-link">
+              <Link to="/help-center" className="footer-link">
                 Help Center
-              </a>
-              <a href="mailto:contact@internshipportal.com" className="footer-link">
+              </Link>
+              <a href="mailto:muhammedendris565@gmail.com" className="footer-link">
                 Email Us
               </a>
             </div>
