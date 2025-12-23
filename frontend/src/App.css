@@ -232,16 +232,17 @@
     border-bottom: 1px solid var(--color-border);
     height: auto;
     justify-content: flex-start;
-    color: var(--color-text-primary); /* Dark text in light mode, light text in dark mode */
+    color: var(--color-text-primary) !important; /* Override white color - Dark text in light mode, light text in dark mode */
   }
 
   .nav-link:hover {
-    color: var(--color-primary); /* Primary blue on hover */
+    color: var(--color-primary) !important; /* Primary blue on hover */
+    background: var(--color-neutral-100);
   }
 
   /* User info text also needs proper color on mobile */
   .user-info {
-    color: var(--color-text-primary);
+    color: var(--color-text-primary) !important;
   }
 
   .nav-link:last-of-type {
