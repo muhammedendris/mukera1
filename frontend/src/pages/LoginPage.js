@@ -148,6 +148,6 @@ const LoginPage = memo(() => {
       </div>
     </div>
   );
-};
+});
 
 export default LoginPage;
