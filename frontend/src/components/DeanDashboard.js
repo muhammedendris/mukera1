@@ -408,6 +408,7 @@ const DeanDashboard = () => {
                       <th>University</th>
                       <th>Department</th>
                       <th>Registration Date</th>
+                      <th>ID Card</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -452,6 +453,21 @@ const DeanDashboard = () => {
 
                         {/* Registration Date */}
                         <td>{new Date(student.createdAt).toLocaleDateString()}</td>
+
+                        {/* ID Card Column */}
+                        <td>
+                          {student.idCardPath ? (
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() => setSelectedIdCard(`${SERVER_URL}${student.idCardPath}`)}
+                              title="View student ID card"
+                            >
+                              📄 View ID
+                            </button>
+                          ) : (
+                            <span style={{ color: '#999', fontStyle: 'italic' }}>No ID Uploaded</span>
+                          )}
+                        </td>
 
                         {/* Actions Column */}
                         <td>
