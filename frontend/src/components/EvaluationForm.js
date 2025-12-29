@@ -19,6 +19,44 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
   const [existingEvaluation, setExistingEvaluation] = useState(null);
   const [isUpdate, setIsUpdate] = useState(false);
 
+  // Grade options with colors
+  const grades = [
+    { value: 'A', label: 'A', color: '#059669', bg: '#D1FAE5' },
+    { value: 'A-', label: 'A-', color: '#059669', bg: '#D1FAE5' },
+    { value: 'B+', label: 'B+', color: '#0060AA', bg: '#CCE0F5' },
+    { value: 'B', label: 'B', color: '#0060AA', bg: '#CCE0F5' },
+    { value: 'B-', label: 'B-', color: '#0060AA', bg: '#CCE0F5' },
+    { value: 'C+', label: 'C+', color: '#D97706', bg: '#FEF3C7' },
+    { value: 'C', label: 'C', color: '#D97706', bg: '#FEF3C7' },
+    { value: 'C-', label: 'C-', color: '#D97706', bg: '#FEF3C7' },
+    { value: 'D', label: 'D', color: '#DC2626', bg: '#FEE2E2' },
+    { value: 'F', label: 'F', color: '#DC2626', bg: '#FEE2E2' }
+  ];
+
+  // Skills configuration
+  const skills = [
+    { key: 'technicalSkills', label: 'Technical Skills', icon: '💻', description: 'Programming, tools, and technical knowledge' },
+    { key: 'communication', label: 'Communication', icon: '💬', description: 'Written and verbal communication abilities' },
+    { key: 'professionalism', label: 'Professionalism', icon: '👔', description: 'Work ethic, punctuality, and behavior' },
+    { key: 'problemSolving', label: 'Problem Solving', icon: '🧩', description: 'Analytical and critical thinking skills' }
+  ];
+
+  // Recommendation options
+  const recommendations = [
+    { value: 'Highly Recommended', icon: '🌟', color: '#059669', bg: '#D1FAE5' },
+    { value: 'Recommended', icon: '✓', color: '#0060AA', bg: '#CCE0F5' },
+    { value: 'Recommended with Reservations', icon: '📋', color: '#D97706', bg: '#FEF3C7' },
+    { value: 'Not Recommended', icon: '✕', color: '#DC2626', bg: '#FEE2E2' }
+  ];
+
+  // Get color based on score
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#059669';
+    if (score >= 60) return '#0060AA';
+    if (score >= 40) return '#D97706';
+    return '#DC2626';
+  };
+
   // Fetch existing evaluation on component mount
   useEffect(() => {
     const fetchExistingEvaluation = async () => {
@@ -27,7 +65,6 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
         if (response.data.evaluation) {
           setExistingEvaluation(response.data.evaluation);
           setIsUpdate(true);
-          // Pre-fill form with existing data
           setFormData({
             grade: response.data.evaluation.grade,
             technicalSkills: response.data.evaluation.technicalSkills,
@@ -42,7 +79,6 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
           });
         }
       } catch (error) {
-        // No evaluation exists (404) - that's okay, create new
         console.log('No existing evaluation found');
       }
     };
@@ -58,6 +94,13 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
     setError('');
   };
 
+  const handleSliderChange = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: parseInt(value)
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -67,14 +110,10 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
       return;
     }
 
-    // Confirmation dialog
     const actionText = isUpdate ? 'update' : 'submit';
     const confirmMessage = isUpdate
-      ? `Are you sure you want to UPDATE this evaluation?\n\n` +
-        `This will replace the previous grade and comments.\n\n` +
-        `This action cannot be undone.`
-      : `Are you sure you want to SUBMIT this grade?\n\n` +
-        `Please verify all details are correct before submitting.`;
+      ? `Are you sure you want to UPDATE this evaluation?\n\nThis will replace the previous grade and comments.`
+      : `Are you sure you want to SUBMIT this evaluation?\n\nPlease verify all details are correct.`;
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -84,10 +123,8 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
 
     try {
       if (isUpdate) {
-        // Update existing evaluation
         await evaluationsAPI.update(existingEvaluation._id, formData);
       } else {
-        // Create new evaluation
         await evaluationsAPI.submit({
           ...formData,
           applicationId,
@@ -104,187 +141,416 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
   };
 
   return (
-    <div className="evaluation-form">
-      {/* Update Mode Info Banner */}
+    <div style={{ padding: '0' }}>
+      {/* Update Mode Banner */}
       {isUpdate && existingEvaluation && (
-        <div className="alert alert-info">
-          <strong>Update Mode</strong>
-          <br />
-          You are updating an existing evaluation for this student.
-          <br />
-          <small>Previously submitted on: {new Date(existingEvaluation.submittedAt).toLocaleDateString()}</small>
+        <div style={{
+          background: 'linear-gradient(135deg, #EBF5FF 0%, #CCE0F5 100%)',
+          border: '1px solid #0060AA',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '24px' }}>📝</span>
+          <div>
+            <strong style={{ color: '#0060AA' }}>Update Mode</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#004D8C' }}>
+              Previously submitted on: {new Date(existingEvaluation.submittedAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
       )}
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && (
+        <div style={{
+          background: '#FEE2E2',
+          border: '1px solid #DC2626',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          marginBottom: '20px',
+          color: '#DC2626',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span>⚠️</span> {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
-        {/* Grade */}
-        <div className="form-group">
-          <label htmlFor="grade">Final Grade *</label>
-          <select
-            id="grade"
-            name="grade"
-            className="form-control"
-            value={formData.grade}
-            onChange={handleChange}
-            required
-          >
-            <option value="A">A</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B">B</option>
-            <option value="B-">B-</option>
-            <option value="C+">C+</option>
-            <option value="C">C</option>
-            <option value="C-">C-</option>
-            <option value="D">D</option>
-            <option value="F">F</option>
-          </select>
-        </div>
-
-        {/* Performance Scores */}
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="technicalSkills">Technical Skills (0-100)</label>
-            <input
-              type="number"
-              id="technicalSkills"
-              name="technicalSkills"
-              className="form-control"
-              value={formData.technicalSkills}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="communication">Communication (0-100)</label>
-            <input
-              type="number"
-              id="communication"
-              name="communication"
-              className="form-control"
-              value={formData.communication}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              required
-            />
+        {/* Grade Selection */}
+        <div style={{ marginBottom: '28px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '12px',
+            fontWeight: '600',
+            color: '#1F2937',
+            fontSize: '15px'
+          }}>
+            Final Grade *
+          </label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '8px'
+          }}>
+            {grades.map((g) => (
+              <button
+                key={g.value}
+                type="button"
+                onClick={() => setFormData({ ...formData, grade: g.value })}
+                style={{
+                  padding: '12px 8px',
+                  border: formData.grade === g.value ? `2px solid ${g.color}` : '2px solid #E5E7EB',
+                  borderRadius: '10px',
+                  background: formData.grade === g.value ? g.bg : 'white',
+                  color: formData.grade === g.value ? g.color : '#6B7280',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  transform: formData.grade === g.value ? 'scale(1.05)' : 'scale(1)'
+                }}
+              >
+                {g.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="professionalism">Professionalism (0-100)</label>
-            <input
-              type="number"
-              id="professionalism"
-              name="professionalism"
-              className="form-control"
-              value={formData.professionalism}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="problemSolving">Problem Solving (0-100)</label>
-            <input
-              type="number"
-              id="problemSolving"
-              name="problemSolving"
-              className="form-control"
-              value={formData.problemSolving}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              required
-            />
-          </div>
+        {/* Skills Assessment */}
+        <div style={{ marginBottom: '28px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '16px',
+            fontWeight: '600',
+            color: '#1F2937',
+            fontSize: '15px'
+          }}>
+            Skills Assessment
+          </label>
+
+          {skills.map((skill) => (
+            <div key={skill.key} style={{
+              background: '#F9FAFB',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '12px',
+              border: '1px solid #E5E7EB'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '20px' }}>{skill.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#1F2937' }}>{skill.label}</div>
+                    <div style={{ fontSize: '12px', color: '#6B7280' }}>{skill.description}</div>
+                  </div>
+                </div>
+                <div style={{
+                  background: getScoreColor(formData[skill.key]),
+                  color: 'white',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  minWidth: '60px',
+                  textAlign: 'center'
+                }}>
+                  {formData[skill.key]}
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={formData[skill.key]}
+                onChange={(e) => handleSliderChange(skill.key, e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  appearance: 'none',
+                  background: `linear-gradient(to right, ${getScoreColor(formData[skill.key])} 0%, ${getScoreColor(formData[skill.key])} ${formData[skill.key]}%, #E5E7EB ${formData[skill.key]}%, #E5E7EB 100%)`,
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
+          ))}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="overallPerformance">Overall Performance (0-100)</label>
+        {/* Overall Performance */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '28px',
+          color: 'white'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: '600' }}>Overall Performance</div>
+              <div style={{ fontSize: '13px', opacity: 0.8 }}>Combined assessment score</div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.2)',
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontSize: '32px',
+              fontWeight: '800'
+            }}>
+              {formData.overallPerformance}
+            </div>
+          </div>
           <input
-            type="number"
-            id="overallPerformance"
-            name="overallPerformance"
-            className="form-control"
-            value={formData.overallPerformance}
-            onChange={handleChange}
+            type="range"
             min="0"
             max="100"
-            required
+            value={formData.overallPerformance}
+            onChange={(e) => handleSliderChange('overallPerformance', e.target.value)}
+            style={{
+              width: '100%',
+              height: '10px',
+              borderRadius: '5px',
+              appearance: 'none',
+              background: `linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.9) ${formData.overallPerformance}%, rgba(255,255,255,0.3) ${formData.overallPerformance}%, rgba(255,255,255,0.3) 100%)`,
+              cursor: 'pointer'
+            }}
           />
         </div>
 
         {/* Comments */}
-        <div className="form-group">
-          <label htmlFor="comments">Comments * (min 50 characters)</label>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            fontWeight: '600',
+            color: '#1F2937',
+            fontSize: '15px'
+          }}>
+            Comments * <span style={{ fontWeight: '400', color: '#6B7280', fontSize: '13px' }}>(min 50 characters)</span>
+          </label>
           <textarea
-            id="comments"
             name="comments"
-            className="form-control"
             value={formData.comments}
             onChange={handleChange}
-            rows="5"
+            rows="4"
+            placeholder="Provide detailed feedback about the student's performance..."
+            style={{
+              width: '100%',
+              padding: '14px',
+              border: '2px solid #E5E7EB',
+              borderRadius: '10px',
+              fontSize: '14px',
+              resize: 'vertical',
+              transition: 'border-color 0.2s',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#0060AA'}
+            onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
             required
-          ></textarea>
-          <small>{formData.comments.length} / 50 characters</small>
+          />
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: '6px',
+            fontSize: '13px',
+            color: formData.comments.length >= 50 ? '#059669' : '#6B7280'
+          }}>
+            {formData.comments.length >= 50 ? '✓ ' : ''}{formData.comments.length} / 50 characters
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="strengths">Strengths</label>
+        {/* Strengths */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '8px',
+            fontWeight: '600',
+            color: '#166534',
+            fontSize: '15px'
+          }}>
+            <span style={{ fontSize: '18px' }}>💪</span> Strengths
+          </label>
           <textarea
-            id="strengths"
             name="strengths"
-            className="form-control"
             value={formData.strengths}
             onChange={handleChange}
             rows="3"
-          ></textarea>
+            placeholder="What did the student excel at?"
+            style={{
+              width: '100%',
+              padding: '14px',
+              border: '2px solid #BBF7D0',
+              borderRadius: '10px',
+              fontSize: '14px',
+              resize: 'vertical',
+              background: '#F0FDF4',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#22C55E'}
+            onBlur={(e) => e.target.style.borderColor = '#BBF7D0'}
+          />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="areasForImprovement">Areas for Improvement</label>
+        {/* Areas for Improvement */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '8px',
+            fontWeight: '600',
+            color: '#92400E',
+            fontSize: '15px'
+          }}>
+            <span style={{ fontSize: '18px' }}>📈</span> Areas for Improvement
+          </label>
           <textarea
-            id="areasForImprovement"
             name="areasForImprovement"
-            className="form-control"
             value={formData.areasForImprovement}
             onChange={handleChange}
             rows="3"
-          ></textarea>
+            placeholder="What areas could the student improve on?"
+            style={{
+              width: '100%',
+              padding: '14px',
+              border: '2px solid #FDE68A',
+              borderRadius: '10px',
+              fontSize: '14px',
+              resize: 'vertical',
+              background: '#FFFBEB',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#F59E0B'}
+            onBlur={(e) => e.target.style.borderColor = '#FDE68A'}
+          />
         </div>
 
         {/* Recommendation */}
-        <div className="form-group">
-          <label htmlFor="recommendation">Recommendation *</label>
-          <select
-            id="recommendation"
-            name="recommendation"
-            className="form-control"
-            value={formData.recommendation}
-            onChange={handleChange}
-            required
-          >
-            <option value="Highly Recommended">Highly Recommended</option>
-            <option value="Recommended">Recommended</option>
-            <option value="Recommended with Reservations">Recommended with Reservations</option>
-            <option value="Not Recommended">Not Recommended</option>
-          </select>
+        <div style={{ marginBottom: '28px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '12px',
+            fontWeight: '600',
+            color: '#1F2937',
+            fontSize: '15px'
+          }}>
+            Recommendation *
+          </label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '10px'
+          }}>
+            {recommendations.map((rec) => (
+              <button
+                key={rec.value}
+                type="button"
+                onClick={() => setFormData({ ...formData, recommendation: rec.value })}
+                style={{
+                  padding: '14px 12px',
+                  border: formData.recommendation === rec.value ? `2px solid ${rec.color}` : '2px solid #E5E7EB',
+                  borderRadius: '10px',
+                  background: formData.recommendation === rec.value ? rec.bg : 'white',
+                  color: formData.recommendation === rec.value ? rec.color : '#6B7280',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>{rec.icon}</span>
+                {rec.value}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading
-            ? (isUpdate ? 'Updating...' : 'Submitting...')
-            : (isUpdate ? '✓ Update Evaluation' : '📤 Submit Evaluation')
-          }
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: loading ? '#9CA3AF' : 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '16px',
+            fontWeight: '700',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            boxShadow: loading ? 'none' : '0 4px 14px rgba(0, 96, 170, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {loading ? (
+            <>
+              <span style={{
+                width: '20px',
+                height: '20px',
+                border: '3px solid rgba(255,255,255,0.3)',
+                borderTopColor: 'white',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              {isUpdate ? 'Updating...' : 'Submitting...'}
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: '20px' }}>{isUpdate ? '✓' : '📤'}</span>
+              {isUpdate ? 'Update Evaluation' : 'Submit Evaluation'}
+            </>
+          )}
         </button>
       </form>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          background: white;
+          border-radius: 50%;
+          cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          background: white;
+          border-radius: 50%;
+          cursor: pointer;
+          border: none;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+      `}</style>
     </div>
   );
 };

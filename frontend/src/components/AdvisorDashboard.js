@@ -15,6 +15,21 @@ const AdvisorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const SERVER_URL = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace('/api', '')
+    : 'https://internship-api-cea6.onrender.com';
+
+  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
+  const getFileUrl = (path) => {
+    if (!path) return null;
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Otherwise, prepend server URL for legacy local paths
+    return `${SERVER_URL}${path}`;
+  };
+
   useEffect(() => {
     loadStudents();
   }, []);
@@ -214,7 +229,13 @@ const AdvisorDashboard = () => {
                 <div className="card mt-2">
                   <h3>Student Reports</h3>
                   {reports.length === 0 ? (
-                    <p>No reports submitted yet.</p>
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#6B7280' }}>
+                      <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
+                      <p style={{ fontWeight: '500' }}>No reports submitted yet</p>
+                      <p style={{ fontSize: '13px', color: '#9CA3AF' }}>
+                        Weekly reports from this student will appear here.
+                      </p>
+                    </div>
                   ) : (
                     <div className="table-responsive">
                       <table className="data-table">
@@ -224,6 +245,7 @@ const AdvisorDashboard = () => {
                             <th>Title</th>
                             <th>Description</th>
                             <th>Date</th>
+                            <th>File</th>
                             <th>Feedback</th>
                             <th>Action</th>
                           </tr>
@@ -231,18 +253,98 @@ const AdvisorDashboard = () => {
                         <tbody>
                           {reports.map((report) => (
                             <tr key={report._id}>
-                              <td>Week {report.weekNumber}</td>
-                              <td>{report.title}</td>
-                              <td>{report.description}</td>
+                              <td>
+                                <span style={{
+                                  background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+                                  color: 'white',
+                                  padding: '4px 12px',
+                                  borderRadius: '20px',
+                                  fontSize: '13px',
+                                  fontWeight: '600'
+                                }}>
+                                  Week {report.weekNumber}
+                                </span>
+                              </td>
+                              <td style={{ fontWeight: '500' }}>{report.title}</td>
+                              <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {report.description}
+                              </td>
                               <td>{new Date(report.uploadDate).toLocaleDateString()}</td>
-                              <td>{report.advisorFeedback || 'No feedback yet'}</td>
+                              <td>
+                                {report.filePath ? (
+                                  <button
+                                    onClick={() => window.open(getFileUrl(report.filePath), '_blank', 'noopener,noreferrer')}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      padding: '6px 12px',
+                                      background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                      fontWeight: '500',
+                                      boxShadow: '0 2px 8px rgba(0, 96, 170, 0.25)',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    title="Download/View Report"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                      <polyline points="7,10 12,15 17,10"></polyline>
+                                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Download
+                                  </button>
+                                ) : (
+                                  <span style={{ color: '#9CA3AF', fontSize: '13px' }}>No file</span>
+                                )}
+                              </td>
+                              <td>
+                                {report.advisorFeedback ? (
+                                  <div style={{
+                                    background: '#F0FDF4',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    borderLeft: '3px solid #22C55E',
+                                    fontSize: '13px',
+                                    maxWidth: '200px'
+                                  }}>
+                                    {report.advisorFeedback}
+                                  </div>
+                                ) : (
+                                  <span style={{
+                                    background: '#FEF3C7',
+                                    color: '#92400E',
+                                    padding: '4px 10px',
+                                    borderRadius: '20px',
+                                    fontSize: '12px'
+                                  }}>
+                                    Pending
+                                  </span>
+                                )}
+                              </td>
                               <td>
                                 {!report.reviewed && (
                                   <button
-                                    className="btn btn-sm btn-primary"
+                                    className="btn btn-sm"
                                     onClick={() => {
                                       const feedback = prompt('Enter your feedback:');
                                       if (feedback) handleAddFeedback(report._id, feedback);
+                                    }}
+                                    style={{
+                                      background: '#F3F4F6',
+                                      color: '#374151',
+                                      border: '1px solid #D1D5DB',
+                                      padding: '6px 12px',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                      fontWeight: '500'
                                     }}
                                   >
                                     Add Feedback
