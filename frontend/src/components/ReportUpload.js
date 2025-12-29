@@ -14,6 +14,21 @@ const ReportUpload = ({ applicationId }) => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const SERVER_URL = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace('/api', '')
+    : 'https://internship-api-cea6.onrender.com';
+
+  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
+  const getFileUrl = (path) => {
+    if (!path) return null;
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Otherwise, prepend server URL for legacy local paths
+    return `${SERVER_URL}${path}`;
+  };
+
   useEffect(() => {
     loadReports();
   }, [applicationId]);
@@ -309,7 +324,7 @@ const ReportUpload = ({ applicationId }) => {
                     <td>{report.title}</td>
                     <td>
                       <a
-                        href={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/${report.filePath}`}
+                        href={getFileUrl(report.filePath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary"

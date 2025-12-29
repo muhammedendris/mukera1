@@ -65,6 +65,33 @@ const applicationAttachmentStorage = multer.diskStorage({
   }
 });
 
+// Storage configuration for live photos (selfies for verification)
+const livePhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads/live-photos');
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, 'live-photo-' + uniqueSuffix + ext);
+  }
+});
+
+// File filter for live photos (images only)
+const livePhotoFileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = file.mimetype.startsWith('image/');
+
+  if (mimetype) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed for live photos'));
+  }
+};
+
 // File filter for ID cards (images and PDFs)
 const idCardFileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|pdf/;
@@ -129,6 +156,71 @@ const uploadApplicationAttachment = multer({
   }
 });
 
+// Multer configuration for live photos
+const uploadLivePhoto = multer({
+  storage: livePhotoStorage,
+  fileFilter: livePhotoFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+// Combined storage for registration (ID card + Live photo)
+const registrationStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let uploadPath;
+    if (file.fieldname === 'idCard') {
+      uploadPath = path.join(__dirname, '../uploads/id-cards');
+    } else if (file.fieldname === 'livePhoto') {
+      uploadPath = path.join(__dirname, '../uploads/live-photos');
+    } else {
+      uploadPath = path.join(__dirname, '../uploads');
+    }
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname) || '.jpg';
+    if (file.fieldname === 'idCard') {
+      cb(null, 'id-card-' + uniqueSuffix + ext);
+    } else if (file.fieldname === 'livePhoto') {
+      cb(null, 'live-photo-' + uniqueSuffix + ext);
+    } else {
+      cb(null, 'file-' + uniqueSuffix + ext);
+    }
+  }
+});
+
+// File filter for registration (accepts images for both fields)
+const registrationFileFilter = (req, file, cb) => {
+  if (file.fieldname === 'idCard') {
+    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf';
+    if (extname || mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only JPG, PNG, and PDF files are allowed for ID cards'));
+  } else if (file.fieldname === 'livePhoto') {
+    if (file.mimetype.startsWith('image/')) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed for live photos'));
+  } else {
+    cb(null, true);
+  }
+};
+
+// Multer configuration for registration with multiple files
+const uploadRegistration = multer({
+  storage: registrationStorage,
+  fileFilter: registrationFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit per file
+  }
+});
+
 // Error handling middleware for multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -156,5 +248,10 @@ module.exports = {
   uploadReport: uploadReport.single('reportFile'),
   uploadAcceptanceLetter: uploadAcceptanceLetter.single('acceptanceLetter'),
   uploadApplicationAttachment: uploadApplicationAttachment.single('attachment'),
+  uploadLivePhoto: uploadLivePhoto.single('livePhoto'),
+  uploadRegistration: uploadRegistration.fields([
+    { name: 'idCard', maxCount: 1 },
+    { name: 'livePhoto', maxCount: 1 }
+  ]),
   handleMulterError
 };

@@ -51,11 +51,20 @@ const registerUser = async (req, res) => {
     }
 
     // Step 2: Check if ID card was uploaded (required for students and deans)
-    if ((role === 'student' || role === 'dean') && !req.file) {
+    if ((role === 'student' || role === 'dean') && (!req.files || !req.files.idCard)) {
       console.log('❌ Validation Failed: ID card not uploaded');
       return res.status(400).json({
         success: false,
         message: 'ID card upload is required'
+      });
+    }
+
+    // Step 2.5: Check if live photo was uploaded (required for deans only)
+    if (role === 'dean' && (!req.files || !req.files.livePhoto)) {
+      console.log('❌ Validation Failed: Live photo not uploaded for dean');
+      return res.status(400).json({
+        success: false,
+        message: 'Live photo capture is required for dean registration'
       });
     }
 
@@ -90,9 +99,14 @@ const registerUser = async (req, res) => {
     if (phone) userData.phone = phone;
     if (address) userData.address = address;
 
-    // Add ID card path if uploaded
-    if (req.file) {
-      userData.idCardPath = `/uploads/id-cards/${req.file.filename}`;
+    // Add ID card path if uploaded (Cloudinary URL)
+    if (req.files && req.files.idCard && req.files.idCard[0]) {
+      userData.idCardPath = req.files.idCard[0].path; // Cloudinary returns full URL in path
+    }
+
+    // Add live photo path if uploaded (for deans) - Cloudinary URL
+    if (req.files && req.files.livePhoto && req.files.livePhoto[0]) {
+      userData.livePhotoPath = req.files.livePhoto[0].path; // Cloudinary returns full URL in path
     }
 
     const user = new User(userData);

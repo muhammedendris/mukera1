@@ -6,7 +6,7 @@ const User = require('../models/User');
 const { isAuthenticated, isStudent, isAdmin, isVerified, isDean } = require('../middleware/auth');
 const { updateStudentStatus, getAcceptedStudents } = require('../controllers/applicationController');
 const { assignAdvisor } = require('../controllers/advisorController');
-const { uploadApplicationAttachment, handleMulterError } = require('../middleware/upload');
+const { uploadAttachment, handleMulterError } = require('../config/cloudinary');
 
 // @route   POST /api/applications
 // @desc    Submit internship application with optional attachment (Student only)
@@ -16,7 +16,7 @@ router.post(
   isAuthenticated,
   isStudent,
   isVerified,
-  uploadApplicationAttachment,
+  uploadAttachment,
   handleMulterError,
   async (req, res) => {
     try {
@@ -55,7 +55,7 @@ router.post(
         requestedDuration,
         coverLetter,
         status: 'pending',
-        attachmentPath: req.file ? '/uploads/attachments/' + req.file.filename : null
+        attachmentPath: req.file ? req.file.path : null // Cloudinary returns full URL
       });
 
       await application.save();

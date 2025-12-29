@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const { isAuthenticated } = require('../middleware/auth');
-const { uploadIdCard, handleMulterError } = require('../middleware/upload');
+const { uploadRegistration, handleMulterError } = require('../config/cloudinary');
 const { requestPasswordReset, resetPasswordWithOTP } = require('../controllers/passwordResetController');
 const { resendVerificationOTP, verifyEmailWithOTP } = require('../controllers/emailVerificationController');
 const { registerUser, loginUser, getCurrentUser } = require('../controllers/authController');
@@ -12,7 +12,7 @@ const { registerUser, loginUser, getCurrentUser } = require('../controllers/auth
 // @access  Public
 router.post(
   '/register',
-  uploadIdCard,
+  uploadRegistration,
   handleMulterError,
   [
     body('email').isEmail().withMessage('Please enter a valid email'),

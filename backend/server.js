@@ -18,7 +18,8 @@ const uploadDirs = [
   path.join(__dirname, 'uploads/id-cards'),
   path.join(__dirname, 'uploads/reports'),
   path.join(__dirname, 'uploads/acceptance-letters'),
-  path.join(__dirname, 'uploads/attachments')
+  path.join(__dirname, 'uploads/attachments'),
+  path.join(__dirname, 'uploads/live-photos')
 ];
 
 uploadDirs.forEach(dir => {

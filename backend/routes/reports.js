@@ -4,7 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Report = require('../models/Report');
 const Application = require('../models/Application');
 const { isAuthenticated, isStudent } = require('../middleware/auth');
-const { uploadReport, handleMulterError } = require('../middleware/upload');
+const { uploadReport, handleMulterError } = require('../config/cloudinary');
 
 // @route   POST /api/reports
 // @desc    Upload weekly report (Student only)
@@ -79,7 +79,7 @@ router.post(
         weekNumber: parseInt(weekNumber),
         title,
         description,
-        filePath: req.file.path
+        filePath: req.file.path // Cloudinary returns full URL
       });
 
       await report.save();
@@ -179,7 +179,7 @@ router.put(
           }
         }
 
-        // Update with new file path
+        // Update with new file path (Cloudinary URL)
         report.filePath = req.file.path;
       }
 

@@ -17,6 +17,10 @@ const AdminDashboard = () => {
   const [selectedIdCard, setSelectedIdCard] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Identity Verification Modal State
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
+  const [selectedDeanForVerification, setSelectedDeanForVerification] = useState(null);
+
   // Cover Letter Modal State
   const [showCoverLetterModal, setShowCoverLetterModal] = useState(false);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(null);
@@ -29,6 +33,17 @@ const AdminDashboard = () => {
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
+
+  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
+  const getFileUrl = (path) => {
+    if (!path) return null;
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Otherwise, prepend server URL for legacy local paths
+    return `${SERVER_URL}${path}`;
+  };
 
   // Helper functions
   const getInitials = (fullName) => {
@@ -317,7 +332,7 @@ const AdminDashboard = () => {
                         <th>University</th>
                         <th>Department</th>
                         <th>Registration Date</th>
-                        <th>ID Card</th>
+                        <th>Identity Verification</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -343,15 +358,23 @@ const AdminDashboard = () => {
                           <td>{dean.department}</td>
                           <td>{new Date(dean.createdAt).toLocaleDateString()}</td>
                           <td>
-                            {dean.idCardPath ? (
+                            {dean.idCardPath || dean.livePhotoPath ? (
                               <button
                                 className="btn btn-info btn-sm"
-                                onClick={() => setSelectedIdCard(`${SERVER_URL}${dean.idCardPath}`)}
+                                onClick={() => {
+                                  setSelectedDeanForVerification(dean);
+                                  setShowIdentityModal(true);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
                               >
-                                📄 View ID
+                                🔍 Verify Identity
                               </button>
                             ) : (
-                              <span style={{ color: '#999' }}>No ID Card</span>
+                              <span style={{ color: '#999' }}>No Documents</span>
                             )}
                           </td>
                           <td>
@@ -520,7 +543,7 @@ const AdminDashboard = () => {
                             {app.attachmentPath ? (
                               <button
                                 className="btn btn-success btn-sm"
-                                onClick={() => window.open(`${SERVER_URL}${app.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                                onClick={() => window.open(getFileUrl(app.attachmentPath), '_blank', 'noopener,noreferrer')}
                                 title="Download student's CV/Resume"
                               >
                                 📎 Download
@@ -927,6 +950,287 @@ const AdminDashboard = () => {
                   e.target.parentElement.innerHTML += '<p style="color: #dc3545; padding: 20px;">Failed to load image. Please check if the file exists on the server.</p>';
                 }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Identity Verification Modal */}
+      {showIdentityModal && selectedDeanForVerification && (
+        <div
+          className="premium-modal"
+          onClick={() => {
+            setShowIdentityModal(false);
+            setSelectedDeanForVerification(null);
+          }}
+        >
+          <div
+            className="premium-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '900px', width: '95%' }}
+          >
+            <button
+              onClick={() => {
+                setShowIdentityModal(false);
+                setSelectedDeanForVerification(null);
+              }}
+              className="premium-close-btn"
+            >
+              Close
+            </button>
+
+            <div className="premium-modal-header">
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '28px' }}>🔐</span>
+                Identity Verification
+              </h2>
+              <p style={{ color: '#6B7280', marginTop: '8px' }}>
+                Compare the ID Card with the Live Photo to verify the dean's identity
+              </p>
+            </div>
+
+            {/* Dean Info */}
+            <div style={{
+              background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
+              border: '1px solid #BAE6FD',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '12px',
+                background: getAvatarColor(selectedDeanForVerification.fullName),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '20px',
+                fontWeight: 'bold'
+              }}>
+                {getInitials(selectedDeanForVerification.fullName)}
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', color: '#0369A1', fontSize: '18px' }}>
+                  {selectedDeanForVerification.fullName}
+                </h3>
+                <p style={{ margin: 0, color: '#6B7280', fontSize: '14px' }}>
+                  {selectedDeanForVerification.email} | {selectedDeanForVerification.university} - {selectedDeanForVerification.department}
+                </p>
+              </div>
+              <div style={{
+                marginLeft: 'auto',
+                padding: '8px 16px',
+                background: '#FEF3C7',
+                color: '#92400E',
+                borderRadius: '20px',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}>
+                ⏳ Pending Verification
+              </div>
+            </div>
+
+            {/* Side by Side Images */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '24px',
+              marginBottom: '24px'
+            }}>
+              {/* ID Card */}
+              <div style={{
+                background: '#F9FAFB',
+                borderRadius: '12px',
+                padding: '16px',
+                border: '2px solid #E5E7EB'
+              }}>
+                <h4 style={{
+                  margin: '0 0 12px 0',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '20px' }}>🪪</span>
+                  Uploaded ID Card
+                </h4>
+                {selectedDeanForVerification.idCardPath ? (
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={getFileUrl(selectedDeanForVerification.idCardPath)}
+                      alt="ID Card"
+                      style={{
+                        width: '100%',
+                        height: '280px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                        background: '#fff',
+                        border: '1px solid #E5E7EB',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(getFileUrl(selectedDeanForVerification.idCardPath), '_blank')}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div style={{
+                      display: 'none',
+                      height: '280px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#FEE2E2',
+                      borderRadius: '8px',
+                      color: '#DC2626'
+                    }}>
+                      Failed to load ID Card
+                    </div>
+                    <p style={{
+                      textAlign: 'center',
+                      color: '#6B7280',
+                      fontSize: '12px',
+                      marginTop: '8px'
+                    }}>
+                      Click image to open in new tab
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{
+                    height: '280px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#FEE2E2',
+                    borderRadius: '8px',
+                    color: '#DC2626'
+                  }}>
+                    No ID Card Uploaded
+                  </div>
+                )}
+              </div>
+
+              {/* Live Photo */}
+              <div style={{
+                background: '#F9FAFB',
+                borderRadius: '12px',
+                padding: '16px',
+                border: '2px solid #E5E7EB'
+              }}>
+                <h4 style={{
+                  margin: '0 0 12px 0',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '20px' }}>📸</span>
+                  Captured Live Photo
+                </h4>
+                {selectedDeanForVerification.livePhotoPath ? (
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={getFileUrl(selectedDeanForVerification.livePhotoPath)}
+                      alt="Live Photo"
+                      style={{
+                        width: '100%',
+                        height: '280px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                        background: '#fff',
+                        border: '1px solid #E5E7EB',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(getFileUrl(selectedDeanForVerification.livePhotoPath), '_blank')}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div style={{
+                      display: 'none',
+                      height: '280px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#FEE2E2',
+                      borderRadius: '8px',
+                      color: '#DC2626'
+                    }}>
+                      Failed to load Live Photo
+                    </div>
+                    <p style={{
+                      textAlign: 'center',
+                      color: '#6B7280',
+                      fontSize: '12px',
+                      marginTop: '8px'
+                    }}>
+                      Click image to open in new tab
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{
+                    height: '280px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#FEF3C7',
+                    borderRadius: '8px',
+                    color: '#92400E'
+                  }}>
+                    No Live Photo Captured
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '16px',
+              paddingTop: '16px',
+              borderTop: '1px solid #E5E7EB'
+            }}>
+              <button
+                className="btn btn-success"
+                onClick={() => {
+                  handleVerifyDean(selectedDeanForVerification._id, 'approve');
+                  setShowIdentityModal(false);
+                  setSelectedDeanForVerification(null);
+                }}
+                style={{
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                ✓ Approve & Verify Dean
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  handleVerifyDean(selectedDeanForVerification._id, 'reject');
+                  setShowIdentityModal(false);
+                  setSelectedDeanForVerification(null);
+                }}
+                style={{
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                ✕ Reject Registration
+              </button>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { isAuthenticated, isAdmin, isDean } = require('../middleware/auth');
-const { uploadAcceptanceLetter, handleMulterError } = require('../middleware/upload');
+const { uploadAcceptanceLetter, handleMulterError } = require('../config/cloudinary');
 
 // @route   GET /api/users/pending-deans
 // @desc    Get all pending dean registrations (Admin only)
@@ -112,9 +112,9 @@ router.patch('/:id/verify', isAuthenticated, uploadAcceptanceLetter, handleMulte
         userToVerify.verifiedBy = req.user._id;
         userToVerify.verifiedAt = new Date();
 
-        // If acceptance letter file was uploaded
+        // If acceptance letter file was uploaded (Cloudinary URL)
         if (req.file) {
-          userToVerify.acceptanceLetterPath = '/uploads/acceptance-letters/' + req.file.filename;
+          userToVerify.acceptanceLetterPath = req.file.path; // Cloudinary returns full URL
         }
 
         await userToVerify.save();

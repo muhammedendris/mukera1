@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
@@ -25,13 +25,21 @@ const RegisterPage = () => {
     university: '',
     department: '',
     phone: '',
-    idCard: null
+    idCard: null,
+    livePhoto: null
   });
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Camera states for dean live photo
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // Security Verification States
   const [mathCaptcha, setMathCaptcha] = useState(generateMathCaptcha());
@@ -45,6 +53,85 @@ const RegisterPage = () => {
   useEffect(() => {
     setMathCaptcha(generateMathCaptcha());
   }, []);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  // Auto-start camera when role changes to dean
+  useEffect(() => {
+    if (formData.role === 'dean' && !capturedPhoto && !showCamera) {
+      // Small delay to ensure component is ready
+      const timer = setTimeout(() => {
+        startCamera();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    // Stop camera when role changes away from dean
+    if (formData.role !== 'dean' && cameraStream) {
+      stopCamera();
+      setCapturedPhoto(null);
+    }
+  }, [formData.role]);
+
+  // Start camera for live photo capture (Dean only)
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: 640, height: 480 }
+      });
+      setCameraStream(stream);
+      setShowCamera(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      setError('Unable to access camera. Please allow camera permission and try again.');
+      console.error('Camera error:', err);
+    }
+  };
+
+  // Capture photo from video stream
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        const photoFile = new File([blob], 'live-photo.jpg', { type: 'image/jpeg' });
+        setFormData(prev => ({ ...prev, livePhoto: photoFile }));
+        setCapturedPhoto(canvas.toDataURL('image/jpeg'));
+        stopCamera();
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  // Stop camera stream
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  // Retake photo
+  const retakePhoto = () => {
+    setCapturedPhoto(null);
+    setFormData(prev => ({ ...prev, livePhoto: null }));
+    startCamera();
+  };
 
   const handleChange = (e) => {
     if (e.target.name === 'idCard') {
@@ -105,6 +192,13 @@ const RegisterPage = () => {
       return;
     }
 
+    // For deans, check if live photo is captured
+    if (formData.role === 'dean' && !formData.livePhoto) {
+      setError('Please capture your live photo for identity verification');
+      setLoading(false);
+      return;
+    }
+
     // Create FormData
     const data = new FormData();
     data.append('email', formData.email);
@@ -115,6 +209,11 @@ const RegisterPage = () => {
     data.append('department', formData.department);
     data.append('phone', formData.phone);
     data.append('idCard', formData.idCard);
+
+    // Add live photo for deans
+    if (formData.role === 'dean' && formData.livePhoto) {
+      data.append('livePhoto', formData.livePhoto);
+    }
 
     const result = await register(data);
 
@@ -405,6 +504,179 @@ const RegisterPage = () => {
                     Accepted formats: JPG, PNG, PDF (Max 5MB)
                   </small>
                 </div>
+
+                {/* Live Photo Capture for Deans */}
+                {formData.role === 'dean' && (
+                  <div className="form-group" style={{
+                    background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+                    border: '2px solid #818CF8',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginTop: '16px'
+                  }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontWeight: '600',
+                      color: '#4338CA',
+                      marginBottom: '12px'
+                    }}>
+                      <span style={{ fontSize: '24px' }}>📸</span>
+                      Live Photo Capture *
+                    </label>
+                    <p style={{ color: '#6366F1', fontSize: '14px', marginBottom: '16px' }}>
+                      Take a live photo for identity verification. This will be compared with your ID card.
+                    </p>
+
+                    {/* Hidden canvas for photo capture */}
+                    <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+                    {/* Camera Preview */}
+                    {showCamera && (
+                      <div style={{
+                        position: 'relative',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        marginBottom: '16px',
+                        background: '#000'
+                      }}>
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          style={{
+                            width: '100%',
+                            maxHeight: '300px',
+                            objectFit: 'cover',
+                            transform: 'scaleX(-1)'
+                          }}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '16px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          display: 'flex',
+                          gap: '12px'
+                        }}>
+                          <button
+                            type="button"
+                            onClick={capturePhoto}
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              borderRadius: '50%',
+                              background: '#fff',
+                              border: '4px solid #4338CA',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '24px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                            }}
+                            title="Capture Photo"
+                          >
+                            📷
+                          </button>
+                          <button
+                            type="button"
+                            onClick={stopCamera}
+                            style={{
+                              padding: '12px 20px',
+                              borderRadius: '8px',
+                              background: '#EF4444',
+                              color: '#fff',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Captured Photo Preview */}
+                    {capturedPhoto && (
+                      <div style={{
+                        position: 'relative',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        marginBottom: '16px'
+                      }}>
+                        <img
+                          src={capturedPhoto}
+                          alt="Captured"
+                          style={{
+                            width: '100%',
+                            maxHeight: '300px',
+                            objectFit: 'cover',
+                            borderRadius: '12px',
+                            border: '3px solid #22C55E'
+                          }}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: '#22C55E',
+                          color: '#fff',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          ✓ Photo Captured
+                        </div>
+                        <button
+                          type="button"
+                          onClick={retakePhoto}
+                          style={{
+                            position: 'absolute',
+                            bottom: '12px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            padding: '10px 24px',
+                            borderRadius: '8px',
+                            background: '#4338CA',
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          🔄 Retake Photo
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Camera Loading / Initializing */}
+                    {!showCamera && !capturedPhoto && (
+                      <div style={{
+                        width: '100%',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)',
+                        color: '#fff',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '24px', marginBottom: '8px' }}>📷</div>
+                        <div style={{ fontWeight: '600', fontSize: '16px' }}>Initializing Camera...</div>
+                        <div style={{ fontSize: '13px', opacity: 0.8, marginTop: '4px' }}>Please allow camera access when prompted</div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Security Check Section */}
                 <div style={{

@@ -19,6 +19,17 @@ const StudentDashboard = () => {
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
 
+  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
+  const getFileUrl = (path) => {
+    if (!path) return null;
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Otherwise, prepend server URL for legacy local paths
+    return `${SERVER_URL}${path}`;
+  };
+
   useEffect(() => {
     loadApplication();
   }, []);
@@ -127,7 +138,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => window.open(`${SERVER_URL}${user.acceptanceLetterPath}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
                     style={{
                       padding: '10px 20px',
                       background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
@@ -218,7 +229,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => window.open(`${SERVER_URL}${application.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => window.open(getFileUrl(application.attachmentPath), '_blank', 'noopener,noreferrer')}
                     className="btn btn-primary btn-sm"
                   >
                     Download
@@ -288,7 +299,7 @@ const StudentDashboard = () => {
                 Your department dean has attached an acceptance letter for you
               </p>
               <button
-                onClick={() => window.open(`${SERVER_URL}${user.acceptanceLetterPath}`, '_blank', 'noopener,noreferrer')}
+                onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
                 className="btn btn-success"
                 style={{
                   display: 'flex',
@@ -318,7 +329,7 @@ const StudentDashboard = () => {
                 The file you attached with your application
               </p>
               <button
-                onClick={() => window.open(`${SERVER_URL}${application.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                onClick={() => window.open(getFileUrl(application.attachmentPath), '_blank', 'noopener,noreferrer')}
                 className="btn btn-primary"
                 style={{
                   display: 'flex',
