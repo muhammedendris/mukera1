@@ -4,6 +4,7 @@ import { applicationsAPI, reportsAPI } from '../services/api';
 import Chat from './Chat';
 import EvaluationForm from './EvaluationForm';
 import ProgressBar from './ProgressBar';
+import Modal from './Modal';
 
 const AdvisorDashboard = () => {
   const { user } = useAuth();
@@ -170,9 +171,9 @@ const AdvisorDashboard = () => {
                   </div>
                   <button
                     className="btn btn-primary mt-2"
-                    onClick={() => setShowEvaluationForm(!showEvaluationForm)}
+                    onClick={() => setShowEvaluationForm(true)}
                   >
-                    {showEvaluationForm ? 'Hide Evaluation Form' : 'Submit Evaluation'}
+                    Submit Evaluation
                   </button>
                 </div>
 
@@ -183,19 +184,21 @@ const AdvisorDashboard = () => {
                   reportsSubmitted={reports.length}
                 />
 
-                {/* Evaluation Form */}
-                {showEvaluationForm && (
-                  <div className="card mt-2">
-                    <EvaluationForm
-                      applicationId={selectedStudent._id}
-                      studentId={selectedStudent.student._id}
-                      onSuccess={() => {
-                        setShowEvaluationForm(false);
-                        alert('Evaluation submitted successfully');
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Evaluation Form Modal */}
+                <Modal
+                  isOpen={showEvaluationForm}
+                  onClose={() => setShowEvaluationForm(false)}
+                  title={`Evaluate ${selectedStudent.student.fullName}`}
+                  size="large"
+                >
+                  <EvaluationForm
+                    applicationId={selectedStudent._id}
+                    studentId={selectedStudent.student._id}
+                    onSuccess={() => {
+                      setShowEvaluationForm(false);
+                    }}
+                  />
+                </Modal>
 
                 {/* Chat */}
                 <div className="card mt-2">

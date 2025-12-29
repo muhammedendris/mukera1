@@ -86,7 +86,6 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
       if (isUpdate) {
         // Update existing evaluation
         await evaluationsAPI.update(existingEvaluation._id, formData);
-        alert('✅ Evaluation updated successfully!');
       } else {
         // Create new evaluation
         await evaluationsAPI.submit({
@@ -94,7 +93,6 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
           applicationId,
           studentId
         });
-        alert('✅ Evaluation submitted successfully!');
       }
 
       onSuccess();
@@ -107,8 +105,6 @@ const EvaluationForm = ({ applicationId, studentId, onSuccess }) => {
 
   return (
     <div className="evaluation-form">
-      <h3>Student Evaluation</h3>
-
       {/* Update Mode Info Banner */}
       {isUpdate && existingEvaluation && (
         <div className="alert alert-info">
