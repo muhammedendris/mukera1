@@ -199,6 +199,33 @@ const StudentDashboard = () => {
               <p><strong>Requested Duration:</strong> {application.requestedDuration}</p>
               <p><strong>Submitted:</strong> {new Date(application.submittedAt).toLocaleDateString()}</p>
             </div>
+
+            {/* My Uploaded CV/Resume */}
+            {application.attachmentPath && (
+              <div style={{
+                marginTop: '20px',
+                padding: '16px',
+                background: '#F0F9FF',
+                borderRadius: '12px',
+                border: '1px solid #BAE6FD'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>📎</span>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#0369A1' }}>My CV/Resume</h4>
+                    <p style={{ margin: 0, color: '#6B7280', fontSize: '0.875rem' }}>
+                      The file you attached with your application
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => window.open(`${SERVER_URL}${application.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Download
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -276,6 +303,36 @@ const StudentDashboard = () => {
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 Download Letter
+              </button>
+            </div>
+          )}
+
+          {/* My Uploaded CV/Resume Card */}
+          {application.attachmentPath && (
+            <div className="card card-highlight">
+              <div className="card-icon-wrapper info">
+                <span className="card-icon">📎</span>
+              </div>
+              <h3>My CV/Resume</h3>
+              <p style={{ color: '#6B7280', marginBottom: '16px' }}>
+                The file you attached with your application
+              </p>
+              <button
+                onClick={() => window.open(`${SERVER_URL}${application.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                className="btn btn-primary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7,10 12,15 17,10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download My File
               </button>
             </div>
           )}
