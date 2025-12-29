@@ -10,6 +10,24 @@ const { Server } = require('socket.io');
 // Load environment variables
 dotenv.config();
 
+const fs = require('fs');
+
+// Ensure upload directories exist on server startup
+const uploadDirs = [
+  path.join(__dirname, 'uploads'),
+  path.join(__dirname, 'uploads/id-cards'),
+  path.join(__dirname, 'uploads/reports'),
+  path.join(__dirname, 'uploads/acceptance-letters'),
+  path.join(__dirname, 'uploads/attachments')
+];
+
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`📁 Created upload directory: ${dir}`);
+  }
+});
+
 // Create Express app
 const app = express();
 const server = http.createServer(app);
