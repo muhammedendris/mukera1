@@ -364,15 +364,183 @@ const StudentDashboard = () => {
 
           {/* Evaluation Card */}
           {evaluation && (
-            <div className="card card-highlight">
-              <div className="card-icon-wrapper warning">
-                <span className="card-icon">⭐</span>
+            <div className="card card-highlight" style={{ gridColumn: '1 / -1' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+                margin: '-20px -20px 20px -20px',
+                padding: '24px',
+                borderRadius: '12px 12px 0 0',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>
+                    Final Evaluation Results
+                  </h3>
+                  <p style={{ margin: '8px 0 0 0', opacity: 0.9 }}>
+                    Submitted by your advisor
+                  </p>
+                </div>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.5rem',
+                  fontWeight: '800',
+                  border: '4px solid rgba(255,255,255,0.4)'
+                }}>
+                  {evaluation.grade}
+                </div>
               </div>
-              <h3>Final Evaluation</h3>
-              <p><strong>Grade:</strong> {evaluation.grade}</p>
-              <p><strong>Overall Performance:</strong> {evaluation.overallPerformance}/100</p>
-              <p><strong>Recommendation:</strong> {evaluation.recommendation}</p>
-              <p><strong>Comments:</strong> {evaluation.comments}</p>
+
+              {/* Performance Summary */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '20px',
+                marginBottom: '24px'
+              }}>
+                {/* Overall Performance */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #EBF5FF 0%, #CCE0F5 100%)',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: '1px solid #99C2E8'
+                }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0060AA' }}>
+                    {evaluation.overallPerformance}
+                  </div>
+                  <div style={{ color: '#004D8C', fontWeight: '600' }}>Overall Score</div>
+                  <div style={{ fontSize: '12px', color: '#6B7280' }}>out of 100</div>
+                </div>
+
+                {/* Recommendation */}
+                <div style={{
+                  background: evaluation.recommendation === 'Highly Recommended'
+                    ? 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)'
+                    : evaluation.recommendation === 'Recommended'
+                    ? 'linear-gradient(135deg, #EBF5FF 0%, #CCE0F5 100%)'
+                    : 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: evaluation.recommendation === 'Highly Recommended'
+                    ? '1px solid #6EE7B7'
+                    : evaluation.recommendation === 'Recommended'
+                    ? '1px solid #99C2E8'
+                    : '1px solid #FCD34D'
+                }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>
+                    {evaluation.recommendation === 'Highly Recommended' ? '🌟' :
+                     evaluation.recommendation === 'Recommended' ? '✓' : '📋'}
+                  </div>
+                  <div style={{
+                    fontWeight: '700',
+                    color: evaluation.recommendation === 'Highly Recommended' ? '#059669' :
+                           evaluation.recommendation === 'Recommended' ? '#0060AA' : '#D97706'
+                  }}>
+                    {evaluation.recommendation}
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills Assessment */}
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ margin: '0 0 16px 0', color: '#1F2937', fontSize: '1.1rem' }}>
+                  Skills Assessment
+                </h4>
+                {[
+                  { label: 'Technical Skills', value: evaluation.technicalSkills, icon: '💻' },
+                  { label: 'Communication', value: evaluation.communication, icon: '💬' },
+                  { label: 'Professionalism', value: evaluation.professionalism, icon: '👔' },
+                  { label: 'Problem Solving', value: evaluation.problemSolving, icon: '🧩' }
+                ].map((skill) => (
+                  <div key={skill.label} style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}>
+                        <span>{skill.icon}</span> {skill.label}
+                      </span>
+                      <span style={{ fontWeight: '700', color: '#0060AA' }}>{skill.value}/100</span>
+                    </div>
+                    <div style={{
+                      height: '10px',
+                      background: '#E5E7EB',
+                      borderRadius: '5px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${skill.value}%`,
+                        background: skill.value >= 80 ? 'linear-gradient(90deg, #059669, #10B981)' :
+                                   skill.value >= 60 ? 'linear-gradient(90deg, #0060AA, #3B82F6)' :
+                                   'linear-gradient(90deg, #F59E0B, #FBBF24)',
+                        borderRadius: '5px',
+                        transition: 'width 1s ease'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Comments Section */}
+              {evaluation.comments && (
+                <div style={{
+                  background: '#F9FAFB',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  borderLeft: '4px solid #0060AA'
+                }}>
+                  <h4 style={{ margin: '0 0 8px 0', color: '#374151', fontSize: '0.95rem' }}>
+                    Advisor Comments
+                  </h4>
+                  <p style={{ margin: 0, color: '#4B5563', lineHeight: '1.6' }}>
+                    {evaluation.comments}
+                  </p>
+                </div>
+              )}
+
+              {/* Strengths */}
+              {evaluation.strengths && (
+                <div style={{
+                  background: '#F0FDF4',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  borderLeft: '4px solid #22C55E'
+                }}>
+                  <h4 style={{ margin: '0 0 8px 0', color: '#166534', fontSize: '0.95rem' }}>
+                    Strengths
+                  </h4>
+                  <p style={{ margin: 0, color: '#15803D', lineHeight: '1.6' }}>
+                    {evaluation.strengths}
+                  </p>
+                </div>
+              )}
+
+              {/* Areas for Improvement */}
+              {evaluation.areasForImprovement && (
+                <div style={{
+                  background: '#FFFBEB',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  borderLeft: '4px solid #F59E0B'
+                }}>
+                  <h4 style={{ margin: '0 0 8px 0', color: '#92400E', fontSize: '0.95rem' }}>
+                    Areas for Improvement
+                  </h4>
+                  <p style={{ margin: 0, color: '#B45309', lineHeight: '1.6' }}>
+                    {evaluation.areasForImprovement}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -127,16 +127,18 @@ router.get('/application/:applicationId', isAuthenticated, async (req, res) => {
       });
     }
 
-    // Check permissions
-    const isStudent = evaluation.student._id.toString() === req.user._id.toString();
-    const isAdvisor = evaluation.advisor._id.toString() === req.user._id.toString();
+    // Check permissions (with null safety)
+    const isStudent = evaluation.student && evaluation.student._id.toString() === req.user._id.toString();
+    const isAdvisor = evaluation.advisor && evaluation.advisor._id.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'company-admin';
 
     // Dean can view evaluations of students from their university
     let isDean = false;
-    if (req.user.role === 'dean') {
+    if (req.user.role === 'dean' && evaluation.student) {
       const student = await User.findById(evaluation.student._id);
-      isDean = student.university === req.user.university && student.department === req.user.department;
+      if (student) {
+        isDean = student.university === req.user.university && student.department === req.user.department;
+      }
     }
 
     if (!isStudent && !isAdvisor && !isAdmin && !isDean) {
