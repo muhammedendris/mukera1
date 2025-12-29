@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema({
       return this.role === 'student' || this.role === 'dean';
     }
   },
+  livePhotoPath: {
+    type: String,
+    default: null
+  },
   isVerified: {
     type: Boolean,
     default: false
