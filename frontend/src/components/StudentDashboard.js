@@ -108,8 +108,8 @@ const StudentDashboard = () => {
             {/* Acceptance Letter Card */}
             {user.acceptanceLetterPath && (
               <div style={{
-                background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
-                border: '1px solid #BBF7D0',
+                background: 'linear-gradient(135deg, #EBF5FF 0%, #CCE0F5 100%)',
+                border: '1px solid #99C2E8',
                 borderRadius: '12px',
                 padding: '16px 20px',
                 marginTop: '16px',
@@ -120,7 +120,7 @@ const StudentDashboard = () => {
                     width: '48px',
                     height: '48px',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                    background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -130,7 +130,7 @@ const StudentDashboard = () => {
                     📄
                   </div>
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 4px 0', color: '#047857', fontSize: '1rem' }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#004D8C', fontSize: '1rem' }}>
                       Acceptance Letter from Dean
                     </h4>
                     <p style={{ margin: 0, color: '#6B7280', fontSize: '0.875rem' }}>
@@ -141,7 +141,7 @@ const StudentDashboard = () => {
                     onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
                     style={{
                       padding: '10px 20px',
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -151,7 +151,7 @@ const StudentDashboard = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
+                      boxShadow: '0 4px 14px rgba(0, 96, 170, 0.25)',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -291,7 +291,7 @@ const StudentDashboard = () => {
           {/* Acceptance Letter Card */}
           {user.acceptanceLetterPath && (
             <div className="card card-highlight">
-              <div className="card-icon-wrapper success">
+              <div className="card-icon-wrapper info" style={{ background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)' }}>
                 <span className="card-icon">📄</span>
               </div>
               <h3>Acceptance Letter</h3>
@@ -300,12 +300,14 @@ const StudentDashboard = () => {
               </p>
               <button
                 onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
-                className="btn btn-success"
+                className="btn btn-primary"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
+                  boxShadow: '0 4px 14px rgba(0, 96, 170, 0.25)'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
