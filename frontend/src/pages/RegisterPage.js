@@ -38,6 +38,8 @@ const RegisterPage = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const [photoConfirmed, setPhotoConfirmed] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -76,8 +78,36 @@ const RegisterPage = () => {
     if (formData.role !== 'dean' && cameraStream) {
       stopCamera();
       setCapturedPhoto(null);
+      setPhotoConfirmed(false);
     }
   }, [formData.role]);
+
+  // Auto-capture with countdown when camera is active
+  useEffect(() => {
+    if (showCamera && cameraStream && !capturedPhoto) {
+      // Start 3-second countdown
+      setCountdown(3);
+
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Capture the photo
+            setTimeout(() => {
+              capturePhoto();
+            }, 100);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => {
+        clearInterval(timer);
+        setCountdown(null);
+      };
+    }
+  }, [showCamera, cameraStream]);
 
   // Start camera for live photo capture (Dean only)
   const startCamera = async () => {
@@ -129,8 +159,14 @@ const RegisterPage = () => {
   // Retake photo
   const retakePhoto = () => {
     setCapturedPhoto(null);
+    setPhotoConfirmed(false);
     setFormData(prev => ({ ...prev, livePhoto: null }));
     startCamera();
+  };
+
+  // Confirm the captured photo and close fullscreen preview
+  const confirmPhoto = () => {
+    setPhotoConfirmed(true);
   };
 
   const handleChange = (e) => {
@@ -532,135 +568,51 @@ const RegisterPage = () => {
                     {/* Hidden canvas for photo capture */}
                     <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-                    {/* Camera Preview */}
-                    {showCamera && (
+                    {/* Photo confirmed indicator - shown in form after user confirms */}
+                    {capturedPhoto && photoConfirmed && (
                       <div style={{
-                        position: 'relative',
+                        padding: '16px',
                         borderRadius: '12px',
-                        overflow: 'hidden',
-                        marginBottom: '16px',
-                        background: '#000'
-                      }}>
-                        <video
-                          ref={videoRef}
-                          autoPlay
-                          playsInline
-                          muted
-                          style={{
-                            width: '100%',
-                            maxHeight: '300px',
-                            objectFit: 'cover',
-                            transform: 'scaleX(-1)'
-                          }}
-                        />
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '16px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          display: 'flex',
-                          gap: '12px'
-                        }}>
-                          <button
-                            type="button"
-                            onClick={capturePhoto}
-                            style={{
-                              width: '64px',
-                              height: '64px',
-                              borderRadius: '50%',
-                              background: '#fff',
-                              border: '4px solid #4338CA',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '24px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                            }}
-                            title="Capture Photo"
-                          >
-                            📷
-                          </button>
-                          <button
-                            type="button"
-                            onClick={stopCamera}
-                            style={{
-                              padding: '12px 20px',
-                              borderRadius: '8px',
-                              background: '#EF4444',
-                              color: '#fff',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontWeight: '600'
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Captured Photo Preview */}
-                    {capturedPhoto && (
-                      <div style={{
-                        position: 'relative',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
+                        background: 'linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%)',
+                        border: '2px solid #22C55E',
                         marginBottom: '16px'
                       }}>
-                        <img
-                          src={capturedPhoto}
-                          alt="Captured"
-                          style={{
-                            width: '100%',
-                            maxHeight: '300px',
-                            objectFit: 'cover',
-                            borderRadius: '12px',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
                             border: '3px solid #22C55E'
-                          }}
-                        />
-                        <div style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          background: '#22C55E',
-                          color: '#fff',
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
-                          ✓ Photo Captured
+                          }}>
+                            <img src={capturedPhoto} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                          <div>
+                            <div style={{ color: '#166534', fontWeight: '600', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              ✓ Live Photo Captured
+                            </div>
+                            <button
+                              type="button"
+                              onClick={retakePhoto}
+                              style={{
+                                marginTop: '4px',
+                                padding: '4px 12px',
+                                background: '#6366F1',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '13px'
+                              }}
+                            >
+                              🔄 Retake
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={retakePhoto}
-                          style={{
-                            position: 'absolute',
-                            bottom: '12px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            padding: '10px 24px',
-                            borderRadius: '8px',
-                            background: '#4338CA',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}
-                        >
-                          🔄 Retake Photo
-                        </button>
                       </div>
                     )}
 
-                    {/* Camera Loading / Initializing */}
+                    {/* Camera Loading / Initializing indicator (before camera opens) */}
                     {!showCamera && !capturedPhoto && (
                       <div style={{
                         width: '100%',
@@ -675,6 +627,212 @@ const RegisterPage = () => {
                         <div style={{ fontSize: '13px', opacity: 0.8, marginTop: '4px' }}>Please allow camera access when prompted</div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* FULLSCREEN CAMERA MODAL - LinkedIn Style */}
+                {showCamera && (
+                  <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    backgroundColor: '#000',
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Video fills entire screen */}
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transform: 'scaleX(-1)'
+                      }}
+                    />
+
+                    {/* Face guide overlay - oval */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '280px',
+                      height: '360px',
+                      border: '4px dashed rgba(255,255,255,0.7)',
+                      borderRadius: '50%',
+                      pointerEvents: 'none',
+                      boxShadow: '0 0 0 9999px rgba(0,0,0,0.3)'
+                    }} />
+
+                    {/* Countdown display */}
+                    {countdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: '150px',
+                        fontWeight: 'bold',
+                        color: 'white',
+                        textShadow: '0 4px 30px rgba(0,0,0,0.7)',
+                        animation: 'pulse 1s ease-in-out'
+                      }}>
+                        {countdown}
+                      </div>
+                    )}
+
+                    {/* Instructions at top */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '60px',
+                      left: 0,
+                      right: 0,
+                      textAlign: 'center',
+                      color: 'white',
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      textShadow: '0 2px 10px rgba(0,0,0,0.7)'
+                    }}>
+                      Position your face in the oval
+                    </div>
+
+                    {/* Auto-capture message */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100px',
+                      left: 0,
+                      right: 0,
+                      textAlign: 'center',
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '16px'
+                    }}>
+                      Photo will be captured automatically
+                    </div>
+
+                    {/* Cancel button */}
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        padding: '12px 24px',
+                        background: 'rgba(239, 68, 68, 0.9)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* FULLSCREEN CAPTURED PHOTO PREVIEW */}
+                {capturedPhoto && !photoConfirmed && !showCamera && (
+                  <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    backgroundColor: '#000',
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Captured photo - fullscreen */}
+                    <img
+                      src={capturedPhoto}
+                      alt="Captured"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+
+                    {/* Success message */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '60px',
+                      left: 0,
+                      right: 0,
+                      textAlign: 'center',
+                      color: '#22C55E',
+                      fontSize: '28px',
+                      fontWeight: 'bold',
+                      textShadow: '0 2px 15px rgba(0,0,0,0.7)'
+                    }}>
+                      ✓ Photo Captured!
+                    </div>
+
+                    {/* Action buttons at bottom */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '60px',
+                      display: 'flex',
+                      gap: '20px'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={retakePhoto}
+                        style={{
+                          padding: '16px 32px',
+                          background: '#6366F1',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        🔄 Retake
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmPhoto}
+                        style={{
+                          padding: '16px 32px',
+                          background: '#22C55E',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        ✓ Use Photo
+                      </button>
+                    </div>
                   </div>
                 )}
 
