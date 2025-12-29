@@ -109,17 +109,21 @@ const RegisterPage = () => {
     }
   }, [showCamera, cameraStream]);
 
+  // Attach camera stream to video element when both are ready
+  useEffect(() => {
+    if (showCamera && cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [showCamera, cameraStream]);
+
   // Start camera for live photo capture (Dean only)
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 }
+        video: { facingMode: 'user', width: 1280, height: 720 }
       });
       setCameraStream(stream);
       setShowCamera(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
     } catch (err) {
       setError('Unable to access camera. Please allow camera permission and try again.');
       console.error('Camera error:', err);
@@ -597,7 +601,7 @@ const RegisterPage = () => {
                               style={{
                                 marginTop: '4px',
                                 padding: '4px 12px',
-                                background: '#6366F1',
+                                background: '#0060AA',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -618,7 +622,7 @@ const RegisterPage = () => {
                         width: '100%',
                         padding: '20px',
                         borderRadius: '8px',
-                        background: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)',
+                        background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
                         color: '#fff',
                         textAlign: 'center'
                       }}>
@@ -667,10 +671,10 @@ const RegisterPage = () => {
                       transform: 'translate(-50%, -50%)',
                       width: '280px',
                       height: '360px',
-                      border: '4px dashed rgba(255,255,255,0.7)',
+                      border: '4px solid rgba(0, 96, 170, 0.8)',
                       borderRadius: '50%',
                       pointerEvents: 'none',
-                      boxShadow: '0 0 0 9999px rgba(0,0,0,0.3)'
+                      boxShadow: '0 0 0 9999px rgba(0,0,0,0.5), inset 0 0 30px rgba(0, 96, 170, 0.3)'
                     }} />
 
                     {/* Countdown display */}
@@ -797,7 +801,7 @@ const RegisterPage = () => {
                         onClick={retakePhoto}
                         style={{
                           padding: '16px 32px',
-                          background: '#6366F1',
+                          background: '#0060AA',
                           color: 'white',
                           border: 'none',
                           borderRadius: '12px',
