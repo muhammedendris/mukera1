@@ -6,27 +6,34 @@ const User = require('../models/User');
 const { isAuthenticated, isStudent, isAdmin, isVerified, isDean } = require('../middleware/auth');
 const { updateStudentStatus, getAcceptedStudents } = require('../controllers/applicationController');
 const { assignAdvisor } = require('../controllers/advisorController');
+const { uploadApplicationAttachment, handleMulterError } = require('../middleware/upload');
 
 // @route   POST /api/applications
-// @desc    Submit internship application (Student only)
+// @desc    Submit internship application with optional attachment (Student only)
 // @access  Private (Student, Verified)
 router.post(
   '/',
   isAuthenticated,
   isStudent,
   isVerified,
-  [
-    body('requestedDuration').notEmpty().withMessage('Internship duration is required'),
-    body('coverLetter').isLength({ min: 100 }).withMessage('Cover letter must be at least 100 characters')
-  ],
+  uploadApplicationAttachment,
+  handleMulterError,
   async (req, res) => {
     try {
-      // Validate input
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
+      // Manual validation since we're using multipart/form-data
+      const { requestedDuration, coverLetter } = req.body;
+
+      if (!requestedDuration) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          message: 'Internship duration is required'
+        });
+      }
+
+      if (!coverLetter || coverLetter.length < 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cover letter must be at least 100 characters'
         });
       }
 
@@ -43,13 +50,12 @@ router.post(
         });
       }
 
-      const { requestedDuration, coverLetter } = req.body;
-
       const application = new Application({
         student: req.user._id,
         requestedDuration,
         coverLetter,
-        status: 'pending'
+        status: 'pending',
+        attachmentPath: req.file ? '/uploads/attachments/' + req.file.filename : null
       });
 
       await application.save();
@@ -85,7 +91,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     if (req.user.role === 'student') {
       // Students see only their own applications
       applications = await Application.find({ student: req.user._id })
-        .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress internshipDurationWeeks rejectionReason')
+        .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress internshipDurationWeeks rejectionReason attachmentPath')
         .populate('student', 'fullName email university department')
         .populate('assignedAdvisor', 'fullName email phone')
         .lean()
@@ -93,7 +99,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     } else if (req.user.role === 'company-admin') {
       // Admin sees all applications
       applications = await Application.find()
-        .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress reviewedBy reviewedAt rejectionReason internshipDurationWeeks')
+        .select('requestedDuration coverLetter status assignedAdvisor createdAt currentProgress reviewedBy reviewedAt rejectionReason internshipDurationWeeks attachmentPath')
         .populate('student', 'fullName email university department')
         .populate('assignedAdvisor', 'fullName email phone')
         .populate('reviewedBy', 'fullName')

@@ -20,6 +20,10 @@ const applicationSchema = new mongoose.Schema({
     required: [true, 'Cover letter is required'],
     minlength: [100, 'Cover letter must be at least 100 characters']
   },
+  attachmentPath: {
+    type: String,
+    default: null
+  },
   status: {
     type: String,
     enum: ['pending', 'accepted', 'rejected'],

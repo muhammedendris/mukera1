@@ -71,6 +71,28 @@ export const usersAPI = {
 // Applications API
 export const applicationsAPI = {
   submit: (applicationData) => api.post('/applications', applicationData),
+  submitWithFile: async (formData) => {
+    // Use fetch API for better FormData handling
+    const token = sessionStorage.getItem('token');
+    const response = await fetch(`${API_URL}/applications`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type - browser will set it automatically with boundary
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.message || 'Application submission failed');
+      error.response = { data };
+      throw error;
+    }
+
+    return { data };
+  },
   getAll: () => api.get('/applications'),
   getById: (id) => api.get(`/applications/${id}`),
   updateStatus: (id, status, rejectionReason = null) => {

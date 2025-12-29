@@ -463,6 +463,7 @@ const AdminDashboard = () => {
                         <th>Duration</th>
                         <th>Status</th>
                         <th>Cover Letter</th>
+                        <th>Attachment</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -514,6 +515,21 @@ const AdminDashboard = () => {
                             >
                               📄 View
                             </button>
+                          </td>
+                          <td>
+                            {app.attachmentPath ? (
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => window.open(`${SERVER_URL}${app.attachmentPath}`, '_blank', 'noopener,noreferrer')}
+                                title="Download student's CV/Resume"
+                              >
+                                📎 Download
+                              </button>
+                            ) : (
+                              <span style={{ color: '#9CA3AF', fontSize: '12px', fontStyle: 'italic' }}>
+                                No file
+                              </span>
+                            )}
                           </td>
                           <td>
                             {app.status === 'pending' && (

@@ -51,6 +51,20 @@ const acceptanceLetterStorage = multer.diskStorage({
   }
 });
 
+// Storage configuration for application attachments (CV/Resume)
+const applicationAttachmentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads/attachments');
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'attachment-' + uniqueSuffix + ext);
+  }
+});
+
 // File filter for ID cards (images and PDFs)
 const idCardFileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|pdf/;
@@ -106,6 +120,15 @@ const uploadAcceptanceLetter = multer({
   }
 });
 
+// Multer configuration for application attachments
+const uploadApplicationAttachment = multer({
+  storage: applicationAttachmentStorage,
+  fileFilter: reportFileFilter, // Same filter as reports (PDF, DOC, DOCX)
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
 // Error handling middleware for multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -132,5 +155,6 @@ module.exports = {
   uploadIdCard: uploadIdCard.single('idCard'),
   uploadReport: uploadReport.single('reportFile'),
   uploadAcceptanceLetter: uploadAcceptanceLetter.single('acceptanceLetter'),
+  uploadApplicationAttachment: uploadApplicationAttachment.single('attachment'),
   handleMulterError
 };
