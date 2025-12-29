@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
 import './Modal.css';
 
 const Modal = ({
@@ -7,8 +6,7 @@ const Modal = ({
   onClose,
   title,
   children,
-  size = 'medium',
-  showSuccess = false
+  size = 'medium'
 }) => {
   // Handle Escape key press
   const handleEscape = useCallback((e) => {
@@ -47,23 +45,9 @@ const Modal = ({
     large: 'modal-large'
   }[size] || 'modal-medium';
 
-  // Modal content
-  const modalContent = (
+  return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
       <div className={`modal-container ${sizeClass}`} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        {/* Success Animation Overlay */}
-        {showSuccess && (
-          <div className="modal-success-overlay">
-            <div className="success-checkmark">
-              <svg viewBox="0 0 52 52" className="checkmark-svg">
-                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-              </svg>
-            </div>
-            <p className="success-text">Success!</p>
-          </div>
-        )}
-
         {/* Header */}
         <div className="modal-header">
           <h2 id="modal-title" className="modal-title">{title}</h2>
@@ -87,9 +71,6 @@ const Modal = ({
       </div>
     </div>
   );
-
-  // Render using Portal to document.body
-  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default Modal;
