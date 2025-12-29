@@ -37,6 +37,20 @@ const reportStorage = multer.diskStorage({
   }
 });
 
+// Storage configuration for acceptance letters
+const acceptanceLetterStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads/acceptance-letters');
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'acceptance-letter-' + uniqueSuffix + ext);
+  }
+});
+
 // File filter for ID cards (images and PDFs)
 const idCardFileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|pdf/;
@@ -83,6 +97,15 @@ const uploadReport = multer({
   }
 });
 
+// Multer configuration for acceptance letters
+const uploadAcceptanceLetter = multer({
+  storage: acceptanceLetterStorage,
+  fileFilter: reportFileFilter, // Same filter as reports (PDF, DOC, DOCX)
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
 // Error handling middleware for multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -108,5 +131,6 @@ const handleMulterError = (err, req, res, next) => {
 module.exports = {
   uploadIdCard: uploadIdCard.single('idCard'),
   uploadReport: uploadReport.single('reportFile'),
+  uploadAcceptanceLetter: uploadAcceptanceLetter.single('acceptanceLetter'),
   handleMulterError
 };

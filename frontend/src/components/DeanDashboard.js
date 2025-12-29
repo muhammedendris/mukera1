@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { usersAPI, evaluationsAPI, applicationsAPI } from '../services/api';
 import axios from 'axios';
 import './DeanDashboard.css';
+import AcceptModal from './AcceptModal';
 
 // Circular Progress Component for Overall Performance
 const CircularProgress = ({ value, max = 100 }) => {
@@ -60,6 +61,9 @@ const DeanDashboard = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [selectedStudentForRejection, setSelectedStudentForRejection] = useState(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [selectedStudentForAccept, setSelectedStudentForAccept] = useState(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
 
   const SERVER_URL = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace('/api', '')
@@ -157,23 +161,49 @@ const DeanDashboard = () => {
     window.open(letterUrl, '_blank', 'noopener,noreferrer');
   };
 
-  // Handle approval with confirmation
-  const handleApprove = async (studentId, studentName) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to APPROVE ${studentName}?\n\n` +
-      `This will mark the student as verified.`
-    );
+  // Handle opening AcceptModal for approval
+  const handleApprove = (student) => {
+    setSelectedStudentForAccept(student);
+    setShowAcceptModal(true);
+  };
 
-    if (confirmed) {
-      try {
+  // Handle acceptance with optional file upload
+  const handleAcceptWithFile = async (studentId, file) => {
+    setAcceptLoading(true);
+    try {
+      if (file) {
+        // Use FormData for file upload
+        const formData = new FormData();
+        formData.append('action', 'approve');
+        formData.append('acceptanceLetter', file);
+        await usersAPI.verifyUserWithFile(studentId, formData);
+      } else {
+        // No file, just approve
         await usersAPI.verifyUser(studentId, 'approve');
-        setMessage(`✅ Student approved: ${studentName}`);
-        loadPendingStudents(); // Reload the list
-        setTimeout(() => setMessage(''), 3000);
-      } catch (error) {
-        setMessage(error.response?.data?.message || 'Failed to approve student');
-        setTimeout(() => setMessage(''), 5000);
       }
+
+      setMessage(`✅ Student approved: ${selectedStudentForAccept.fullName}`);
+      setShowAcceptModal(false);
+      setSelectedStudentForAccept(null);
+      loadPendingStudents(); // Reload the list
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Accept student error:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to approve student';
+      setMessage(`❌ Error: ${errorMsg}`);
+      setShowAcceptModal(false);
+      setSelectedStudentForAccept(null);
+      setTimeout(() => setMessage(''), 5000);
+    } finally {
+      setAcceptLoading(false);
+    }
+  };
+
+  // Handle closing AcceptModal
+  const handleCloseAcceptModal = () => {
+    if (!acceptLoading) {
+      setShowAcceptModal(false);
+      setSelectedStudentForAccept(null);
     }
   };
 
@@ -473,9 +503,9 @@ const DeanDashboard = () => {
                         <td>
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleApprove(student._id, student.fullName)}
+                            onClick={() => handleApprove(student)}
                             style={{ marginRight: '8px' }}
-                            title="Approve acceptance letter"
+                            title="Approve student with optional acceptance letter"
                           >
                             ✓ Approve
                           </button>
@@ -1118,6 +1148,15 @@ const DeanDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Accept Student Modal with File Upload */}
+      <AcceptModal
+        isOpen={showAcceptModal}
+        onClose={handleCloseAcceptModal}
+        student={selectedStudentForAccept}
+        onConfirm={handleAcceptWithFile}
+        loading={acceptLoading}
+      />
     </div>
   );
 };

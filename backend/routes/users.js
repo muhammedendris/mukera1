@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { isAuthenticated, isAdmin, isDean } = require('../middleware/auth');
+const { uploadAcceptanceLetter, handleMulterError } = require('../middleware/upload');
 
 // @route   GET /api/users/pending-deans
 // @desc    Get all pending dean registrations (Admin only)
@@ -58,7 +59,7 @@ router.get('/pending-students', isAuthenticated, isDean, async (req, res) => {
 // @route   PATCH /api/users/:id/verify
 // @desc    Verify a user (Admin verifies Dean, Dean verifies Student)
 // @access  Private (Admin or Dean)
-router.patch('/:id/verify', isAuthenticated, async (req, res) => {
+router.patch('/:id/verify', isAuthenticated, uploadAcceptanceLetter, handleMulterError, async (req, res) => {
   try {
     const userId = req.params.id;
     const { action } = req.body; // 'approve' or 'reject'
@@ -78,6 +79,8 @@ router.patch('/:id/verify', isAuthenticated, async (req, res) => {
       // Admin can verify deans
       if (action === 'approve') {
         userToVerify.isVerified = true;
+        userToVerify.verifiedBy = req.user._id;
+        userToVerify.verifiedAt = new Date();
         await userToVerify.save();
 
         return res.json({
@@ -106,6 +109,14 @@ router.patch('/:id/verify', isAuthenticated, async (req, res) => {
 
       if (action === 'approve') {
         userToVerify.isVerified = true;
+        userToVerify.verifiedBy = req.user._id;
+        userToVerify.verifiedAt = new Date();
+
+        // If acceptance letter file was uploaded
+        if (req.file) {
+          userToVerify.acceptanceLetterPath = '/uploads/acceptance-letters/' + req.file.filename;
+        }
+
         await userToVerify.save();
 
         return res.json({

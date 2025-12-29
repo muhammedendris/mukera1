@@ -43,6 +43,28 @@ export const usersAPI = {
   getPendingDeans: () => api.get('/users/pending-deans'),
   getPendingStudents: () => api.get('/users/pending-students'),
   verifyUser: (userId, action) => api.patch(`/users/${userId}/verify`, { action }),
+  verifyUserWithFile: async (userId, formData) => {
+    // Use fetch API for better FormData handling
+    const token = sessionStorage.getItem('token');
+    const response = await fetch(`${API_URL}/users/${userId}/verify`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type - browser will set it automatically with boundary
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.message || 'Upload failed');
+      error.response = { data };
+      throw error;
+    }
+
+    return { data };
+  },
   getUserById: (userId) => api.get(`/users/${userId}`)
 };
 

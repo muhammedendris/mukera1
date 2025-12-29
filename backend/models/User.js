@@ -52,6 +52,17 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  acceptanceLetterPath: {
+    type: String,
+    default: null
+  },
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  verifiedAt: {
+    type: Date
+  },
   phone: {
     type: String,
     trim: true

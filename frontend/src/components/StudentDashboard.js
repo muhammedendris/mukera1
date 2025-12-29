@@ -15,6 +15,10 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
+  const SERVER_URL = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace('/api', '')
+    : 'https://internship-api-cea6.onrender.com';
+
   useEffect(() => {
     loadApplication();
   }, []);
@@ -89,6 +93,70 @@ const StudentDashboard = () => {
           <div className="card">
             <h2>Welcome, {user.fullName}!</h2>
             <p>Your account has been verified. You can now apply for an internship.</p>
+
+            {/* Acceptance Letter Card */}
+            {user.acceptanceLetterPath && (
+              <div style={{
+                background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+                border: '1px solid #BBF7D0',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginTop: '16px',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px'
+                  }}>
+                    📄
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#047857', fontSize: '1rem' }}>
+                      Acceptance Letter from Dean
+                    </h4>
+                    <p style={{ margin: 0, color: '#6B7280', fontSize: '0.875rem' }}>
+                      Your department dean has attached an acceptance letter for you
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => window.open(`${SERVER_URL}${user.acceptanceLetterPath}`, '_blank', 'noopener,noreferrer')}
+                    style={{
+                      padding: '10px 20px',
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7,10 12,15 17,10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               className="btn btn-primary btn-lg mt-2"
               onClick={() => setShowApplicationForm(true)}
@@ -181,6 +249,36 @@ const StudentDashboard = () => {
               <p><strong>Submitted:</strong> {new Date(application.submittedAt).toLocaleDateString()}</p>
             </div>
           </div>
+
+          {/* Acceptance Letter Card */}
+          {user.acceptanceLetterPath && (
+            <div className="card card-highlight">
+              <div className="card-icon-wrapper success">
+                <span className="card-icon">📄</span>
+              </div>
+              <h3>Acceptance Letter</h3>
+              <p style={{ color: '#6B7280', marginBottom: '16px' }}>
+                Your department dean has attached an acceptance letter for you
+              </p>
+              <button
+                onClick={() => window.open(`${SERVER_URL}${user.acceptanceLetterPath}`, '_blank', 'noopener,noreferrer')}
+                className="btn btn-success"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7,10 12,15 17,10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Letter
+              </button>
+            </div>
+          )}
 
           {/* Advisor Card */}
           {application.assignedAdvisor && (
