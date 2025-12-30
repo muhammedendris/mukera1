@@ -69,6 +69,17 @@ const DeanDashboard = () => {
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
 
+  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
+  const getFileUrl = (path) => {
+    if (!path) return null;
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // Otherwise, prepend server URL for legacy local paths
+    return `${SERVER_URL}${path}`;
+  };
+
   useEffect(() => {
     loadPendingStudents();
     loadVerifiedStudentsWithEvaluations();
@@ -489,7 +500,7 @@ const DeanDashboard = () => {
                           {student.idCardPath ? (
                             <button
                               className="btn btn-info btn-sm"
-                              onClick={() => setSelectedIdCard(`${SERVER_URL}${student.idCardPath}`)}
+                              onClick={() => setSelectedIdCard(getFileUrl(student.idCardPath))}
                               title="View student ID card"
                             >
                               📄 View ID
