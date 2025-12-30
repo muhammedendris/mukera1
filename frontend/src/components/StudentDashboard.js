@@ -31,7 +31,7 @@ const StudentDashboard = () => {
   };
 
   // Handle file download with proper error handling
-  const handleDownload = (filePath, fileName = 'document') => {
+  const handleDownload = async (filePath, fileName = 'document') => {
     if (!filePath) {
       alert('No file available to download');
       console.error('Download failed: File path is missing');
@@ -48,16 +48,46 @@ const StudentDashboard = () => {
     console.log('Downloading file from:', fileUrl);
 
     try {
-      // Create a temporary link element for download
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      // For Cloudinary and cross-origin URLs, fetch as blob first
+      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+        // Show loading state (optional - could add a loading indicator)
+        const response = await fetch(fileUrl);
 
-      // Try to trigger download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        // Determine file extension from URL or content type
+        let downloadFileName = fileName;
+        const contentType = response.headers.get('content-type');
+        if (contentType && !fileName.includes('.')) {
+          if (contentType.includes('pdf')) downloadFileName += '.pdf';
+          else if (contentType.includes('png')) downloadFileName += '.png';
+          else if (contentType.includes('jpeg') || contentType.includes('jpg')) downloadFileName += '.jpg';
+          else if (contentType.includes('doc')) downloadFileName += '.docx';
+        }
+
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = downloadFileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        // For local files, use direct link
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download file. Please try again.');
