@@ -30,6 +30,40 @@ const StudentDashboard = () => {
     return `${SERVER_URL}${path}`;
   };
 
+  // Handle file download with proper error handling
+  const handleDownload = (filePath, fileName = 'document') => {
+    if (!filePath) {
+      alert('No file available to download');
+      console.error('Download failed: File path is missing');
+      return;
+    }
+
+    const fileUrl = getFileUrl(filePath);
+    if (!fileUrl) {
+      alert('Unable to generate download link');
+      console.error('Download failed: Could not generate file URL');
+      return;
+    }
+
+    console.log('Downloading file from:', fileUrl);
+
+    try {
+      // Create a temporary link element for download
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      // Try to trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download file. Please try again.');
+    }
+  };
+
   useEffect(() => {
     loadApplication();
   }, []);
@@ -138,7 +172,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
+                    onClick={() => handleDownload(user.acceptanceLetterPath, 'acceptance-letter.pdf')}
                     style={{
                       padding: '10px 20px',
                       background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
@@ -229,7 +263,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => window.open(getFileUrl(application.attachmentPath), '_blank', 'noopener,noreferrer')}
+                    onClick={() => handleDownload(application.attachmentPath, 'my-cv.pdf')}
                     className="btn btn-primary btn-sm"
                   >
                     Download
@@ -299,7 +333,7 @@ const StudentDashboard = () => {
                 Your department dean has attached an acceptance letter for you
               </p>
               <button
-                onClick={() => window.open(getFileUrl(user.acceptanceLetterPath), '_blank', 'noopener,noreferrer')}
+                onClick={() => handleDownload(user.acceptanceLetterPath, 'acceptance-letter.pdf')}
                 className="btn btn-primary"
                 style={{
                   display: 'flex',
@@ -331,7 +365,7 @@ const StudentDashboard = () => {
                 The file you attached with your application
               </p>
               <button
-                onClick={() => window.open(getFileUrl(application.attachmentPath), '_blank', 'noopener,noreferrer')}
+                onClick={() => handleDownload(application.attachmentPath, 'my-cv.pdf')}
                 className="btn btn-primary"
                 style={{
                   display: 'flex',
