@@ -37,10 +37,14 @@ const getPublicIdFromUrl = (url) => {
 
 // Get resource type from URL (image, raw, video)
 const getResourceTypeFromUrl = (url) => {
-  if (url.includes('/image/upload/')) return 'image';
   if (url.includes('/raw/upload/')) return 'raw';
+  if (url.includes('/image/upload/')) return 'image';
   if (url.includes('/video/upload/')) return 'video';
-  return 'auto';
+  // Check file extension for PDFs that might be stored differently
+  if (url.toLowerCase().endsWith('.pdf') || url.toLowerCase().endsWith('.doc') || url.toLowerCase().endsWith('.docx')) {
+    return 'raw';
+  }
+  return 'image';  // Default to image
 };
 
 // Generate signed URL for Cloudinary resource
