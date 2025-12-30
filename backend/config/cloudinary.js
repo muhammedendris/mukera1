@@ -29,33 +29,39 @@ const livePhotoStorage = new CloudinaryStorage({
   }
 });
 
-// Storage for Acceptance Letters
+// Storage for Acceptance Letters - use dynamic params based on file type
 const acceptanceLetterStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'internship/acceptance-letters',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
-    resource_type: 'auto'
+  params: async (req, file) => {
+    const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+    return {
+      folder: 'internship/acceptance-letters',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
+      resource_type: isPdf ? 'raw' : 'image',  // PDFs as raw, images as image
+      access_mode: 'public'  // Ensure public access
+    };
   }
 });
 
-// Storage for Reports
+// Storage for Reports - PDFs should be raw type
 const reportStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'internship/reports',
     allowed_formats: ['pdf', 'doc', 'docx'],
-    resource_type: 'auto'
+    resource_type: 'raw',  // Documents should always be raw
+    access_mode: 'public'
   }
 });
 
-// Storage for Application Attachments (CV/Resume)
+// Storage for Application Attachments (CV/Resume) - PDFs should be raw type
 const attachmentStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'internship/attachments',
     allowed_formats: ['pdf', 'doc', 'docx'],
-    resource_type: 'auto'
+    resource_type: 'raw',  // Documents should always be raw
+    access_mode: 'public'
   }
 });
 
