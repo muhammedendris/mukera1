@@ -19,6 +19,8 @@ const AdvisorDashboard = () => {
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
 
+  const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
+
   // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
   const getFileUrl = (path) => {
     if (!path) return null;
@@ -28,6 +30,54 @@ const AdvisorDashboard = () => {
     }
     // Otherwise, prepend server URL for legacy local paths
     return `${SERVER_URL}${path}`;
+  };
+
+  // Handle file download using backend proxy (avoids CORS/auth issues with Cloudinary)
+  const handleDownloadReport = async (reportId) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        alert('Please login to download files');
+        return;
+      }
+
+      const downloadUrl = `${API_URL}/download/report/${reportId}`;
+      console.log('Downloading report from:', downloadUrl);
+
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'report.pdf';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) filename = match[1];
+      }
+
+      // Create download link
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download report. Please try again.');
+    }
   };
 
   useEffect(() => {
@@ -273,7 +323,7 @@ const AdvisorDashboard = () => {
                               <td>
                                 {report.filePath ? (
                                   <button
-                                    onClick={() => window.open(getFileUrl(report.filePath), '_blank', 'noopener,noreferrer')}
+                                    onClick={() => handleDownloadReport(report._id)}
                                     style={{
                                       display: 'inline-flex',
                                       alignItems: 'center',

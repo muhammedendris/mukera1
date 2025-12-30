@@ -5,6 +5,7 @@ const http = require('http');
 const { isAuthenticated } = require('../middleware/auth');
 const User = require('../models/User');
 const Application = require('../models/Application');
+const Report = require('../models/Report');
 const { cloudinary } = require('../config/cloudinary');
 
 // Extract public_id from Cloudinary URL
@@ -325,6 +326,74 @@ router.get('/id-card/:userId', isAuthenticated, async (req, res) => {
 
   } catch (error) {
     console.error('Download ID card error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to download file',
+        error: error.message
+      });
+    }
+  }
+});
+
+// @route   GET /api/download/report/:reportId
+// @desc    Download a weekly report (Student owner or assigned Advisor)
+// @access  Private
+router.get('/report/:reportId', isAuthenticated, async (req, res) => {
+  try {
+    const { reportId } = req.params;
+
+    const report = await Report.findById(reportId)
+      .populate('student', 'fullName')
+      .populate('application');
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    // Check permissions - student owner, assigned advisor, or admin
+    const isOwner = report.student._id.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'company-admin';
+    const isAssignedAdvisor = report.application.assignedAdvisor &&
+                              report.application.assignedAdvisor.toString() === req.user._id.toString();
+
+    if (!isOwner && !isAdmin && !isAssignedAdvisor) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    if (!report.filePath) {
+      return res.status(404).json({
+        success: false,
+        message: 'No file found for this report'
+      });
+    }
+
+    // Generate filename
+    const ext = report.filePath.split('.').pop() || 'pdf';
+    const studentName = report.student.fullName.replace(/\s+/g, '-');
+    const filename = `Week${report.weekNumber}-Report-${studentName}.${ext}`;
+
+    // Try original URL first, then signed URL if that fails
+    try {
+      await streamFile(report.filePath, res, filename);
+    } catch (error) {
+      if (error.message.includes('401') || error.message.includes('403')) {
+        console.log('Original URL failed, trying signed URL...');
+        const signedUrl = getSignedUrl(report.filePath);
+        await streamFile(signedUrl, res, filename);
+      } else {
+        throw error;
+      }
+    }
+
+  } catch (error) {
+    console.error('Download report error:', error);
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
