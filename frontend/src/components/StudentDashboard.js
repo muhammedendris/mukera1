@@ -30,8 +30,31 @@ const StudentDashboard = () => {
     return `${SERVER_URL}${path}`;
   };
 
+  // Convert Cloudinary URL to force download using fl_attachment
+  const getCloudinaryDownloadUrl = (url, fileName) => {
+    if (!url) return null;
+
+    // Check if it's a Cloudinary URL
+    if (url.includes('cloudinary.com')) {
+      // For image/upload URLs, add fl_attachment transformation
+      if (url.includes('/image/upload/')) {
+        return url.replace('/image/upload/', `/image/upload/fl_attachment:${encodeURIComponent(fileName)}/`);
+      }
+      // For raw/upload URLs (PDFs, docs), add fl_attachment
+      if (url.includes('/raw/upload/')) {
+        return url.replace('/raw/upload/', `/raw/upload/fl_attachment:${encodeURIComponent(fileName)}/`);
+      }
+      // For auto/upload or other types
+      if (url.includes('/upload/')) {
+        const parts = url.split('/upload/');
+        return `${parts[0]}/upload/fl_attachment:${encodeURIComponent(fileName)}/${parts[1]}`;
+      }
+    }
+    return url;
+  };
+
   // Handle file download with proper error handling
-  const handleDownload = async (filePath, fileName = 'document') => {
+  const handleDownload = (filePath, fileName = 'document') => {
     if (!filePath) {
       alert('No file available to download');
       console.error('Download failed: File path is missing');
@@ -45,49 +68,15 @@ const StudentDashboard = () => {
       return;
     }
 
-    console.log('Downloading file from:', fileUrl);
+    console.log('Original file URL:', fileUrl);
 
     try {
-      // For Cloudinary and cross-origin URLs, fetch as blob first
-      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-        // Show loading state (optional - could add a loading indicator)
-        const response = await fetch(fileUrl);
+      // For Cloudinary URLs, use fl_attachment to force download
+      const downloadUrl = getCloudinaryDownloadUrl(fileUrl, fileName);
+      console.log('Download URL:', downloadUrl);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-
-        // Determine file extension from URL or content type
-        let downloadFileName = fileName;
-        const contentType = response.headers.get('content-type');
-        if (contentType && !fileName.includes('.')) {
-          if (contentType.includes('pdf')) downloadFileName += '.pdf';
-          else if (contentType.includes('png')) downloadFileName += '.png';
-          else if (contentType.includes('jpeg') || contentType.includes('jpg')) downloadFileName += '.jpg';
-          else if (contentType.includes('doc')) downloadFileName += '.docx';
-        }
-
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = downloadFileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Clean up the blob URL
-        window.URL.revokeObjectURL(blobUrl);
-      } else {
-        // For local files, use direct link
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      // Open the URL - fl_attachment will force browser to download
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download file. Please try again.');
