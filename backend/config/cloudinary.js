@@ -37,8 +37,7 @@ const acceptanceLetterStorage = new CloudinaryStorage({
     return {
       folder: 'internship/acceptance-letters',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
-      resource_type: isPdf ? 'raw' : 'image',  // PDFs as raw, images as image
-      access_mode: 'public'  // Ensure public access
+      resource_type: isPdf ? 'raw' : 'image'  // PDFs as raw, images as image
     };
   }
 });
@@ -49,8 +48,7 @@ const reportStorage = new CloudinaryStorage({
   params: {
     folder: 'internship/reports',
     allowed_formats: ['pdf', 'doc', 'docx'],
-    resource_type: 'raw',  // Documents should always be raw
-    access_mode: 'public'
+    resource_type: 'raw'  // Documents should always be raw
   }
 });
 
@@ -60,8 +58,7 @@ const attachmentStorage = new CloudinaryStorage({
   params: {
     folder: 'internship/attachments',
     allowed_formats: ['pdf', 'doc', 'docx'],
-    resource_type: 'raw',  // Documents should always be raw
-    access_mode: 'public'
+    resource_type: 'raw'  // Documents should always be raw
   }
 });
 
