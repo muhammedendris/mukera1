@@ -19,64 +19,54 @@ const StudentDashboard = () => {
     ? process.env.REACT_APP_API_URL.replace('/api', '')
     : 'https://internship-api-cea6.onrender.com';
 
-  // Helper to get file URL (handles both Cloudinary URLs and legacy local paths)
-  const getFileUrl = (path) => {
-    if (!path) return null;
-    // If it's already a full URL (Cloudinary), return as-is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    // Otherwise, prepend server URL for legacy local paths
-    return `${SERVER_URL}${path}`;
-  };
+  const API_URL = process.env.REACT_APP_API_URL || 'https://internship-api-cea6.onrender.com/api';
 
-  // Convert Cloudinary URL to force download using fl_attachment
-  const getCloudinaryDownloadUrl = (url, fileName) => {
-    if (!url) return null;
-
-    // Check if it's a Cloudinary URL
-    if (url.includes('cloudinary.com')) {
-      // For image/upload URLs, add fl_attachment transformation
-      if (url.includes('/image/upload/')) {
-        return url.replace('/image/upload/', `/image/upload/fl_attachment:${encodeURIComponent(fileName)}/`);
-      }
-      // For raw/upload URLs (PDFs, docs), add fl_attachment
-      if (url.includes('/raw/upload/')) {
-        return url.replace('/raw/upload/', `/raw/upload/fl_attachment:${encodeURIComponent(fileName)}/`);
-      }
-      // For auto/upload or other types
-      if (url.includes('/upload/')) {
-        const parts = url.split('/upload/');
-        return `${parts[0]}/upload/fl_attachment:${encodeURIComponent(fileName)}/${parts[1]}`;
-      }
-    }
-    return url;
-  };
-
-  // Handle file download with proper error handling
-  const handleDownload = (filePath, fileName = 'document') => {
-    if (!filePath) {
-      alert('No file available to download');
-      console.error('Download failed: File path is missing');
-      return;
-    }
-
-    const fileUrl = getFileUrl(filePath);
-    if (!fileUrl) {
-      alert('Unable to generate download link');
-      console.error('Download failed: Could not generate file URL');
-      return;
-    }
-
-    console.log('Original file URL:', fileUrl);
-
+  // Handle file download using backend proxy (avoids CORS/auth issues with Cloudinary)
+  const handleDownload = async (type, id, fallbackUrl = null) => {
     try {
-      // For Cloudinary URLs, use fl_attachment to force download
-      const downloadUrl = getCloudinaryDownloadUrl(fileUrl, fileName);
-      console.log('Download URL:', downloadUrl);
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        alert('Please login to download files');
+        return;
+      }
 
-      // Open the URL - fl_attachment will force browser to download
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      // Use backend proxy endpoint
+      const downloadUrl = `${API_URL}/download/${type}/${id}`;
+
+      console.log('Downloading from:', downloadUrl);
+
+      // Fetch the file with authentication
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'download';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) filename = match[1];
+      }
+
+      // Create download link
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download file. Please try again.');
@@ -191,7 +181,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleDownload(user.acceptanceLetterPath, 'acceptance-letter.pdf')}
+                    onClick={() => handleDownload('acceptance-letter', user._id)}
                     style={{
                       padding: '10px 20px',
                       background: 'linear-gradient(135deg, #0060AA 0%, #004D8C 100%)',
@@ -282,7 +272,7 @@ const StudentDashboard = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleDownload(application.attachmentPath, 'my-cv.pdf')}
+                    onClick={() => handleDownload('attachment', application._id)}
                     className="btn btn-primary btn-sm"
                   >
                     Download
@@ -352,7 +342,7 @@ const StudentDashboard = () => {
                 Your department dean has attached an acceptance letter for you
               </p>
               <button
-                onClick={() => handleDownload(user.acceptanceLetterPath, 'acceptance-letter.pdf')}
+                onClick={() => handleDownload('acceptance-letter', user._id)}
                 className="btn btn-primary"
                 style={{
                   display: 'flex',
@@ -384,7 +374,7 @@ const StudentDashboard = () => {
                 The file you attached with your application
               </p>
               <button
-                onClick={() => handleDownload(application.attachmentPath, 'my-cv.pdf')}
+                onClick={() => handleDownload('attachment', application._id)}
                 className="btn btn-primary"
                 style={{
                   display: 'flex',
