@@ -15,12 +15,9 @@ router.post(
   isAdvisor,
   [
     body('applicationId').notEmpty().withMessage('Application ID is required'),
-    body('grade').isIn(['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F']).withMessage('Invalid grade'),
-    body('technicalSkills').isInt({ min: 0, max: 100 }).withMessage('Technical skills must be between 0-100'),
-    body('communication').isInt({ min: 0, max: 100 }).withMessage('Communication must be between 0-100'),
-    body('professionalism').isInt({ min: 0, max: 100 }).withMessage('Professionalism must be between 0-100'),
-    body('problemSolving').isInt({ min: 0, max: 100 }).withMessage('Problem solving must be between 0-100'),
-    body('overallPerformance').isInt({ min: 0, max: 100 }).withMessage('Overall performance must be between 0-100'),
+    body('skillsAssessment').isArray({ min: 1 }).withMessage('At least one skill assessment is required'),
+    body('skillsAssessment.*.skillName').notEmpty().withMessage('Skill name is required'),
+    body('skillsAssessment.*.score').isInt({ min: 0, max: 100 }).withMessage('Score must be between 0-100'),
     body('comments').isLength({ min: 50 }).withMessage('Comments must be at least 50 characters'),
     body('recommendation').isIn(['Highly Recommended', 'Recommended', 'Recommended with Reservations', 'Not Recommended']).withMessage('Invalid recommendation')
   ],
@@ -37,12 +34,7 @@ router.post(
 
       const {
         applicationId,
-        grade,
-        technicalSkills,
-        communication,
-        professionalism,
-        problemSolving,
-        overallPerformance,
+        skillsAssessment,
         comments,
         strengths,
         areasForImprovement,
@@ -81,12 +73,7 @@ router.post(
         student: application.student,
         advisor: req.user._id,
         application: applicationId,
-        grade,
-        technicalSkills,
-        communication,
-        professionalism,
-        problemSolving,
-        overallPerformance,
+        skillsAssessment,
         comments,
         strengths,
         areasForImprovement,
@@ -236,8 +223,7 @@ router.put('/:id', isAuthenticated, isAdvisor, async (req, res) => {
 
     // Update fields
     const allowedUpdates = [
-      'grade', 'technicalSkills', 'communication', 'professionalism',
-      'problemSolving', 'overallPerformance', 'comments', 'strengths',
+      'skillsAssessment', 'comments', 'strengths',
       'areasForImprovement', 'recommendation'
     ];
 

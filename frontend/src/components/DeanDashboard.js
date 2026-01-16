@@ -289,14 +289,22 @@ const DeanDashboard = () => {
     return { total, thisWeek, withCompany, avgDuration };
   };
 
-  // Helper function for grade color coding
-  const getGradeClass = (grade) => {
-    if (grade === 'A' || grade === 'A-') return 'grade-a';
-    if (grade === 'B+' || grade === 'B' || grade === 'B-') return 'grade-b';
-    if (grade === 'C+' || grade === 'C' || grade === 'C-') return 'grade-c';
-    if (grade === 'D') return 'grade-d';
-    if (grade === 'F') return 'grade-f';
-    return 'grade-b'; // Default to blue
+  // Helper function for score color coding (based on average score)
+  const getScoreClass = (score) => {
+    if (score >= 90) return 'grade-a'; // Excellent
+    if (score >= 80) return 'grade-b'; // Good
+    if (score >= 70) return 'grade-c'; // Satisfactory
+    if (score >= 60) return 'grade-d'; // Needs Improvement
+    return 'grade-f'; // Poor
+  };
+
+  // Helper function to get score badge color
+  const getScoreBadgeColor = (score) => {
+    if (score >= 90) return '#059669'; // Green
+    if (score >= 80) return '#0060AA'; // Blue
+    if (score >= 70) return '#D97706'; // Orange
+    if (score >= 60) return '#F59E0B'; // Yellow
+    return '#DC2626'; // Red
   };
 
   // Calculate summary statistics for evaluations tab
@@ -305,25 +313,18 @@ const DeanDashboard = () => {
     const completedEvals = verifiedStudents.filter(s => s.evaluation).length;
     const pendingEvals = totalStudents - completedEvals;
 
-    // Convert letter grades to GPA
-    const gradeMap = {
-      'A': 4.0, 'A-': 3.7,
-      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-      'D': 1.0, 'F': 0.0
-    };
-
+    // Calculate average score from all evaluations
     const evaluatedStudents = verifiedStudents.filter(s => s.evaluation);
-    const avgGradeNumeric = evaluatedStudents.length > 0
-      ? evaluatedStudents.reduce((sum, s) => sum + (gradeMap[s.evaluation.grade] || 0), 0) / evaluatedStudents.length
+    const avgScoreNumeric = evaluatedStudents.length > 0
+      ? evaluatedStudents.reduce((sum, s) => sum + (s.evaluation.averageScore || 0), 0) / evaluatedStudents.length
       : 0;
 
-    const avgGradeDisplay = avgGradeNumeric.toFixed(2);
+    const avgScoreDisplay = avgScoreNumeric.toFixed(1);
     const completionRate = totalStudents > 0
       ? Math.round((completedEvals / totalStudents) * 100)
       : 0;
 
-    return { totalStudents, completedEvals, pendingEvals, avgGradeDisplay, completionRate };
+    return { totalStudents, completedEvals, pendingEvals, avgScoreDisplay, completionRate };
   };
 
   // Get student initials for avatar
@@ -756,14 +757,14 @@ const DeanDashboard = () => {
                 </div>
               </div>
 
-              {/* Average Grade */}
+              {/* Average Score */}
               <div className="eval-summary-card">
                 <div className="eval-card-icon info">
                   ⭐
                 </div>
-                <div className="eval-card-label">Average Grade</div>
-                <div className="eval-card-value">{getEvaluationStats().avgGradeDisplay}</div>
-                <div className="eval-card-sublabel">GPA Scale</div>
+                <div className="eval-card-label">Average Score</div>
+                <div className="eval-card-value">{getEvaluationStats().avgScoreDisplay}/100</div>
+                <div className="eval-card-sublabel">Class Performance</div>
               </div>
             </div>
 
@@ -782,7 +783,7 @@ const DeanDashboard = () => {
                         <th>Company</th>
                         <th>Advisor</th>
                         <th>Status</th>
-                        <th>Grade</th>
+                        <th>Average Score</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -816,7 +817,19 @@ const DeanDashboard = () => {
                           </td>
                           <td>
                             {item.evaluation ? (
-                              <span className="grade-display">{item.evaluation.grade}</span>
+                              <span
+                                className="grade-display"
+                                style={{
+                                  background: getScoreBadgeColor(item.evaluation.averageScore),
+                                  color: 'white',
+                                  padding: '6px 14px',
+                                  borderRadius: '6px',
+                                  fontWeight: '700',
+                                  fontSize: '14px'
+                                }}
+                              >
+                                {item.evaluation.averageScore}/100
+                              </span>
                             ) : (
                               <span className="grade-display no-grade">—</span>
                             )}
@@ -937,67 +950,156 @@ const DeanDashboard = () => {
               </p>
             </div>
 
-            {/* Top Summary Cards: Grade + Performance */}
+            {/* Top Summary Cards: Average Score + Total Score */}
             <div className="premium-summary-grid">
-              {/* Final Grade Card with Color Coding */}
-              <div className={`premium-grade-card ${getGradeClass(selectedStudent.evaluation.grade)}`}>
-                <div className="grade-label">Final Grade</div>
-                <div className="grade-value">{selectedStudent.evaluation.grade}</div>
-                <div className="grade-sublabel">Academic Performance</div>
+              {/* Average Score Card with Color Coding */}
+              <div className={`premium-grade-card ${getScoreClass(selectedStudent.evaluation.averageScore)}`}>
+                <div className="grade-label">Average Score</div>
+                <div className="grade-value">{selectedStudent.evaluation.averageScore}/100</div>
+                <div className="grade-sublabel">Overall Performance</div>
               </div>
 
-              {/* Overall Performance Card with Circular Progress */}
+              {/* Total Score Card with Circular Progress */}
               <div className="premium-performance-card">
-                <h3>Overall Performance</h3>
+                <h3>Total Score</h3>
                 <CircularProgress
-                  value={selectedStudent.evaluation.overallPerformance}
-                  max={100}
+                  value={selectedStudent.evaluation.totalScore}
+                  max={selectedStudent.evaluation.skillsAssessment?.length * 100 || 100}
                 />
+                <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '14px', color: '#6B7280' }}>
+                  {selectedStudent.evaluation.skillsAssessment?.length || 0} Skills Evaluated
+                </div>
               </div>
             </div>
 
-            {/* Skill Assessment Section with Icons */}
+            {/* Skills Assessment Table */}
             <div className="premium-skills-section">
-              <h3>Skill Assessment</h3>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600', color: '#1F2937' }}>
+                Skills Assessment
+              </h3>
 
-              {[
-                {
-                  label: 'Technical Skills',
-                  value: selectedStudent.evaluation.technicalSkills,
-                  icon: '💻'
-                },
-                {
-                  label: 'Communication',
-                  value: selectedStudent.evaluation.communication,
-                  icon: '💬'
-                },
-                {
-                  label: 'Professionalism',
-                  value: selectedStudent.evaluation.professionalism,
-                  icon: '👔'
-                },
-                {
-                  label: 'Problem Solving',
-                  value: selectedStudent.evaluation.problemSolving,
-                  icon: '🧩'
-                }
-              ].map((skill) => (
-                <div key={skill.label} className="premium-skill-item">
-                  <div className="skill-icon">{skill.icon}</div>
-                  <div className="skill-info">
-                    <div className="skill-label">
-                      <span>{skill.label}</span>
-                      <span>{skill.value}/100</span>
-                    </div>
-                    <div className="skill-progress-track">
-                      <div
-                        className="skill-progress-fill"
-                        style={{ width: `${skill.value}%` }}
-                      />
+              {selectedStudent.evaluation.skillsAssessment && selectedStudent.evaluation.skillsAssessment.length > 0 ? (
+                <div className="table-responsive" style={{ marginBottom: '24px' }}>
+                  <table className="data-table" style={{ width: '100%' }}>
+                    <thead>
+                      <tr style={{ background: '#F9FAFB' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>#</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Skill Name</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Score</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Performance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedStudent.evaluation.skillsAssessment.map((skill, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                          <td style={{ padding: '16px', fontWeight: '600', color: '#6B7280' }}>
+                            {index + 1}
+                          </td>
+                          <td style={{ padding: '16px', fontWeight: '500', color: '#1F2937' }}>
+                            {skill.skillName}
+                          </td>
+                          <td style={{ padding: '16px', textAlign: 'center' }}>
+                            <span style={{
+                              background: getScoreBadgeColor(skill.score),
+                              color: 'white',
+                              padding: '6px 14px',
+                              borderRadius: '6px',
+                              fontWeight: '700',
+                              fontSize: '14px'
+                            }}>
+                              {skill.score}/100
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px' }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              width: '100%'
+                            }}>
+                              <div style={{
+                                flex: 1,
+                                height: '8px',
+                                background: '#E5E7EB',
+                                borderRadius: '4px',
+                                overflow: 'hidden'
+                              }}>
+                                <div style={{
+                                  width: `${skill.score}%`,
+                                  height: '100%',
+                                  background: getScoreBadgeColor(skill.score),
+                                  borderRadius: '4px',
+                                  transition: 'width 0.3s ease'
+                                }} />
+                              </div>
+                              <span style={{
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                color: '#6B7280',
+                                minWidth: '60px'
+                              }}>
+                                {skill.score >= 90 ? 'Excellent' :
+                                 skill.score >= 80 ? 'Good' :
+                                 skill.score >= 70 ? 'Satisfactory' :
+                                 skill.score >= 60 ? 'Fair' : 'Poor'}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Summary Statistics */}
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '16px 20px',
+                    background: 'linear-gradient(135deg, #EBF5FF 0%, #CCE0F5 100%)',
+                    borderRadius: '8px',
+                    border: '1px solid #0060AA'
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Skills</div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#0060AA' }}>
+                          {selectedStudent.evaluation.skillsAssessment.length}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Score</div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#0060AA' }}>
+                          {selectedStudent.evaluation.totalScore}/{selectedStudent.evaluation.skillsAssessment.length * 100}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Average Score</div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#0060AA' }}>
+                          {selectedStudent.evaluation.averageScore}/100
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Performance</div>
+                        <div style={{ fontSize: '16px', fontWeight: '600', color: '#0060AA' }}>
+                          {selectedStudent.evaluation.averageScore >= 90 ? '⭐ Excellent' :
+                           selectedStudent.evaluation.averageScore >= 80 ? '✓ Good' :
+                           selectedStudent.evaluation.averageScore >= 70 ? '◉ Satisfactory' :
+                           selectedStudent.evaluation.averageScore >= 60 ? '△ Fair' : '✕ Needs Improvement'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              ) : (
+                <div style={{
+                  padding: '40px',
+                  textAlign: 'center',
+                  background: '#F9FAFB',
+                  borderRadius: '8px',
+                  color: '#6B7280'
+                }}>
+                  No skills assessment data available
+                </div>
+              )}
             </div>
 
             {/* Recommendation Section */}

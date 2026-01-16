@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../services/api';
+import { authAPI, settingsAPI } from '../services/api';
 import Toast from '../components/Toast';
 import '../App.css';
 
@@ -48,12 +48,38 @@ const RegisterPage = () => {
   const [mathAnswer, setMathAnswer] = useState('');
   const [securityAnswer, setSecurityAnswer] = useState('');
 
+  // Registration Settings States
+  const [registrationSettings, setRegistrationSettings] = useState(null);
+  const [registrationAllowed, setRegistrationAllowed] = useState(true);
+  const [registrationMessage, setRegistrationMessage] = useState('');
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
   // Generate new Math CAPTCHA when component loads
   useEffect(() => {
     setMathCaptcha(generateMathCaptcha());
+  }, []);
+
+  // Check registration settings on mount
+  useEffect(() => {
+    const checkRegistrationSettings = async () => {
+      try {
+        const response = await settingsAPI.getSettings();
+        const data = response.data.data;
+        setRegistrationSettings(data);
+        setRegistrationAllowed(data.canRegister);
+        if (!data.canRegister) {
+          setRegistrationMessage(data.message);
+        }
+      } catch (err) {
+        console.error('Failed to fetch registration settings:', err);
+        // Default to allowing registration if check fails
+        setRegistrationAllowed(true);
+      }
+    };
+
+    checkRegistrationSettings();
   }, []);
 
   // Cleanup camera stream on unmount
@@ -358,6 +384,90 @@ const RegisterPage = () => {
 
             {step === 1 ? (
               <form onSubmit={handleRegisterSubmit} className="auth-form">
+                {/* Registration Status Banner */}
+                {formData.role === 'student' && !registrationAllowed && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)',
+                    border: '2px solid #DC2626',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    marginBottom: '24px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px'
+                  }}>
+                    <span style={{ fontSize: '24px' }}>🚫</span>
+                    <div>
+                      <div style={{
+                        fontWeight: '700',
+                        fontSize: '16px',
+                        color: '#991B1B',
+                        marginBottom: '6px'
+                      }}>
+                        Student Registration Closed
+                      </div>
+                      <div style={{
+                        fontSize: '14px',
+                        color: '#7F1D1D',
+                        lineHeight: '1.5'
+                      }}>
+                        {registrationMessage}
+                      </div>
+                      {registrationSettings && (
+                        <div style={{
+                          marginTop: '10px',
+                          fontSize: '13px',
+                          color: '#991B1B',
+                          fontStyle: 'italic'
+                        }}>
+                          Current capacity: {registrationSettings.currentStudents}/{registrationSettings.maxStudents} students
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Registration Info Banner (When Open) */}
+                {formData.role === 'student' && registrationAllowed && registrationSettings && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+                    border: '2px solid #059669',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    marginBottom: '24px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px'
+                  }}>
+                    <span style={{ fontSize: '24px' }}>✅</span>
+                    <div>
+                      <div style={{
+                        fontWeight: '700',
+                        fontSize: '16px',
+                        color: '#065F46',
+                        marginBottom: '6px'
+                      }}>
+                        Registration is Open
+                      </div>
+                      <div style={{
+                        fontSize: '14px',
+                        color: '#047857',
+                        lineHeight: '1.5'
+                      }}>
+                        Registration period: {new Date(registrationSettings.registrationStartDate).toLocaleDateString()} - {new Date(registrationSettings.registrationEndDate).toLocaleDateString()}
+                      </div>
+                      <div style={{
+                        marginTop: '6px',
+                        fontSize: '13px',
+                        color: '#065F46',
+                        fontStyle: 'italic'
+                      }}>
+                        Available slots: {registrationSettings.remainingSlots} of {registrationSettings.maxStudents}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Role Selection */}
                 <div className="form-group">
                   <label htmlFor="role">I am a</label>
@@ -935,9 +1045,13 @@ const RegisterPage = () => {
                 <button
                   type="submit"
                   className="btn btn-primary btn-block"
-                  disabled={loading}
+                  disabled={loading || (formData.role === 'student' && !registrationAllowed)}
+                  style={{
+                    opacity: (formData.role === 'student' && !registrationAllowed) ? 0.5 : 1,
+                    cursor: (formData.role === 'student' && !registrationAllowed) ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                  {loading ? 'Creating Account...' : (formData.role === 'student' && !registrationAllowed) ? 'Registration Closed' : 'Create Account'}
                 </button>
               </form>
             ) : (

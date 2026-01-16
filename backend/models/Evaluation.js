@@ -16,40 +16,29 @@ const evaluationSchema = new mongoose.Schema({
     ref: 'Application',
     required: true
   },
-  grade: {
-    type: String,
-    required: [true, 'Grade is required'],
-    enum: ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'],
-  },
-  technicalSkills: {
+  // Dynamic skills assessment array
+  skillsAssessment: [{
+    skillName: {
+      type: String,
+      required: [true, 'Skill name is required'],
+      trim: true
+    },
+    score: {
+      type: Number,
+      required: [true, 'Score is required'],
+      min: [0, 'Score must be at least 0'],
+      max: [100, 'Score cannot exceed 100']
+    }
+  }],
+  // Auto-calculated total score
+  totalScore: {
     type: Number,
-    required: true,
-    min: 0,
-    max: 100
+    default: 0
   },
-  communication: {
+  // Auto-calculated average score
+  averageScore: {
     type: Number,
-    required: true,
-    min: 0,
-    max: 100
-  },
-  professionalism: {
-    type: Number,
-    required: true,
-    min: 0,
-    max: 100
-  },
-  problemSolving: {
-    type: Number,
-    required: true,
-    min: 0,
-    max: 100
-  },
-  overallPerformance: {
-    type: Number,
-    required: true,
-    min: 0,
-    max: 100
+    default: 0
   },
   comments: {
     type: String,
@@ -79,6 +68,21 @@ const evaluationSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Pre-save middleware to calculate totalScore and averageScore
+evaluationSchema.pre('save', function(next) {
+  if (this.skillsAssessment && this.skillsAssessment.length > 0) {
+    // Calculate total score
+    this.totalScore = this.skillsAssessment.reduce((sum, skill) => sum + skill.score, 0);
+
+    // Calculate average score
+    this.averageScore = Math.round(this.totalScore / this.skillsAssessment.length);
+  } else {
+    this.totalScore = 0;
+    this.averageScore = 0;
+  }
+  next();
 });
 
 // Ensure one evaluation per application

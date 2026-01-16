@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, applicationsAPI, advisorsAPI } from '../services/api';
+import RegistrationSettings from './RegistrationSettings';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -211,8 +212,33 @@ const AdminDashboard = () => {
   return (
     <div className="dashboard">
       <div className="container dashboard-container">
-        <h1>Admin Dashboard</h1>
-        <p className="dashboard-subtitle">Welcome, {user.fullName}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p className="dashboard-subtitle">Welcome, {user.fullName}</p>
+          </div>
+          <a
+            href="/reports"
+            style={{
+              padding: '12px 24px',
+              background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <span>📊</span> View Reports
+          </a>
+        </div>
 
         {message && <div className="alert alert-success">{message}</div>}
 
@@ -254,6 +280,7 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab('advisors')}
             style={{
               padding: '12px 24px',
+              marginRight: '10px',
               border: 'none',
               borderBottom: activeTab === 'advisors' ? '3px solid #0060AA' : 'none',
               background: 'transparent',
@@ -264,6 +291,21 @@ const AdminDashboard = () => {
             }}
           >
             Manage Advisors ({advisors.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              borderBottom: activeTab === 'settings' ? '3px solid #0060AA' : 'none',
+              background: 'transparent',
+              color: activeTab === 'settings' ? '#0060AA' : '#666',
+              fontWeight: activeTab === 'settings' ? '600' : '400',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            ⚙️ Registration Settings
           </button>
         </div>
 
@@ -779,6 +821,11 @@ const AdminDashboard = () => {
               )}
             </div>
           </>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <RegistrationSettings />
         )}
       </div>
 

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { applicationsAPI, reportsAPI } from '../services/api';
+import { applicationsAPI, reportsAPI, evaluationsAPI } from '../services/api';
 import Chat from './Chat';
 import EvaluationForm from './EvaluationForm';
 import ProgressBar from './ProgressBar';
 import Modal from './Modal';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AdvisorDashboard = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [reports, setReports] = useState([]);
+  const [evaluation, setEvaluation] = useState(null);
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,6 +90,7 @@ const AdvisorDashboard = () => {
   useEffect(() => {
     if (selectedStudent) {
       loadReports(selectedStudent._id);
+      loadEvaluation(selectedStudent._id);
     }
   }, [selectedStudent]);
 
@@ -94,7 +98,11 @@ const AdvisorDashboard = () => {
     try {
       setError(null);
       const response = await applicationsAPI.getAll();
-      setStudents(response.data.applications);
+      // Filter out applications where student reference is null
+      const validApplications = response.data.applications.filter(
+        app => app.student && app.student._id
+      );
+      setStudents(validApplications);
     } catch (err) {
       console.error('Failed to load students:', err);
       setError('Failed to load students. Please try refreshing the page.');
@@ -110,6 +118,186 @@ const AdvisorDashboard = () => {
     } catch (error) {
       console.error('Failed to load reports:', error);
     }
+  };
+
+  const loadEvaluation = async (applicationId) => {
+    try {
+      const response = await evaluationsAPI.getByApplication(applicationId);
+      setEvaluation(response.data.evaluation);
+    } catch (error) {
+      console.log('No evaluation found:', error);
+      setEvaluation(null);
+    }
+  };
+
+  // Generate PDF from evaluation
+  const handleDownloadEvaluationPDF = () => {
+    if (!evaluation || !selectedStudent) return;
+
+    const doc = new jsPDF();
+
+    // Add header
+    doc.setFillColor(0, 96, 170);
+    doc.rect(0, 0, 210, 40, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student Evaluation Report', 105, 20, { align: 'center' });
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+
+    let yPos = 50;
+
+    // Student Information
+    if (selectedStudent.student) {
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Student Information', 14, yPos);
+      yPos += 10;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Name: ${selectedStudent.student.fullName || 'N/A'}`, 14, yPos);
+      yPos += 7;
+      doc.text(`Email: ${selectedStudent.student.email || 'N/A'}`, 14, yPos);
+      yPos += 7;
+      doc.text(`University: ${selectedStudent.student.university || 'N/A'}`, 14, yPos);
+      yPos += 7;
+      doc.text(`Department: ${selectedStudent.student.department || 'N/A'}`, 14, yPos);
+      yPos += 12;
+    }
+
+    // Skills Assessment Table
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Skills Assessment', 14, yPos);
+    yPos += 5;
+
+    if (evaluation.skillsAssessment && evaluation.skillsAssessment.length > 0) {
+      const skillsData = evaluation.skillsAssessment.map((skill, index) => [
+        index + 1,
+        skill.skillName,
+        skill.score + '/100'
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['#', 'Skill Name', 'Score']],
+        body: skillsData,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [0, 96, 170],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 11
+        },
+        columnStyles: {
+          0: { cellWidth: 15 },
+          1: { cellWidth: 120 },
+          2: { cellWidth: 45, halign: 'center' }
+        }
+      });
+
+      yPos = doc.lastAutoTable.finalY + 10;
+
+      // Score Summary
+      doc.setFillColor(240, 249, 255);
+      doc.rect(14, yPos, 182, 20, 'F');
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Total Score: ${evaluation.totalScore || 0}`, 20, yPos + 8);
+      doc.text(`Average Score: ${evaluation.averageScore || 0}/100`, 20, yPos + 15);
+
+      yPos += 30;
+    }
+
+    // Comments
+    if (evaluation.comments) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Comments', 14, yPos);
+      yPos += 7;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const commentLines = doc.splitTextToSize(evaluation.comments, 180);
+      doc.text(commentLines, 14, yPos);
+      yPos += (commentLines.length * 5) + 10;
+    }
+
+    // Strengths
+    if (evaluation.strengths && yPos < 270) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Strengths', 14, yPos);
+      yPos += 7;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const strengthLines = doc.splitTextToSize(evaluation.strengths, 180);
+      doc.text(strengthLines, 14, yPos);
+      yPos += (strengthLines.length * 5) + 10;
+    }
+
+    // Areas for Improvement (new page if needed)
+    if (evaluation.areasForImprovement) {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Areas for Improvement', 14, yPos);
+      yPos += 7;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const improvementLines = doc.splitTextToSize(evaluation.areasForImprovement, 180);
+      doc.text(improvementLines, 14, yPos);
+      yPos += (improvementLines.length * 5) + 10;
+    }
+
+    // Recommendation
+    if (yPos > 260) {
+      doc.addPage();
+      yPos = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recommendation', 14, yPos);
+    yPos += 7;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(evaluation.recommendation || 'N/A', 14, yPos);
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+      doc.text('Internship Management System - Confidential', 105, 285, { align: 'center' });
+    }
+
+    // Save PDF
+    const fileName = selectedStudent.student
+      ? `Evaluation_${selectedStudent.student.fullName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`
+      : `Evaluation_${new Date().getTime()}.pdf`;
+
+    doc.save(fileName);
   };
 
   const handleAddFeedback = async (reportId, feedback) => {
@@ -191,16 +379,21 @@ const AdvisorDashboard = () => {
                 </div>
               ) : (
                 <div className="students-list">
-                  {students.map((app) => (
-                    <div
-                      key={app._id}
-                      className={`student-item ${selectedStudent?._id === app._id ? 'active' : ''}`}
-                      onClick={() => setSelectedStudent(app)}
-                    >
-                      <h4>{app.student.fullName}</h4>
-                      <p>{app.student.university}</p>
-                    </div>
-                  ))}
+                  {students.map((app) => {
+                    // Safety check: ensure student exists
+                    if (!app.student) return null;
+
+                    return (
+                      <div
+                        key={app._id}
+                        className={`student-item ${selectedStudent?._id === app._id ? 'active' : ''}`}
+                        onClick={() => setSelectedStudent(app)}
+                      >
+                        <h4>{app.student.fullName}</h4>
+                        <p>{app.student.university}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -234,12 +427,41 @@ const AdvisorDashboard = () => {
                     <p><strong>Department:</strong> {selectedStudent.student.department}</p>
                     <p><strong>Duration:</strong> {selectedStudent.requestedDuration}</p>
                   </div>
-                  <button
-                    className="btn btn-primary mt-2"
-                    onClick={() => setShowEvaluationForm(true)}
-                  >
-                    Submit Evaluation
-                  </button>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setShowEvaluationForm(true)}
+                      style={{ flex: 1 }}
+                    >
+                      {evaluation ? '📝 View/Edit Evaluation' : '📤 Submit Evaluation'}
+                    </button>
+                    {evaluation && (
+                      <button
+                        onClick={handleDownloadEvaluationPDF}
+                        style={{
+                          flex: 1,
+                          padding: '12px 20px',
+                          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        <span>📄</span> Download PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Student Progress */}
@@ -261,6 +483,7 @@ const AdvisorDashboard = () => {
                     studentId={selectedStudent.student._id}
                     onSuccess={() => {
                       setShowEvaluationForm(false);
+                      loadEvaluation(selectedStudent._id);
                     }}
                   />
                 </Modal>

@@ -65,6 +65,8 @@ const reportRoutes = require('./routes/reports');
 const contactRoutes = require('./routes/contact');
 const studentRoutes = require('./routes/students');
 const downloadRoutes = require('./routes/download');
+const adminRoutes = require('./routes/admin');
+const settingsRoutes = require('./routes/settings');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -77,6 +79,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/download', downloadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/settings', require('./routes/settings'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

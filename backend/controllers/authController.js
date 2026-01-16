@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const SystemSetting = require('../models/SystemSetting');
 const { sendRegistrationOTP } = require('../utils/sendEmail');
 const jwt = require('jsonwebtoken');
 
@@ -81,6 +82,27 @@ const registerUser = async (req, res) => {
     }
 
     console.log('✅ Email is available');
+
+    // Step 3.5: Check registration control settings (for students only)
+    if (role === 'student') {
+      console.log('\n🔒 Checking registration control settings...');
+
+      const settings = await SystemSetting.getInstance();
+      const registrationCheck = await settings.canRegister();
+
+      if (!registrationCheck.allowed) {
+        console.log('❌ Registration blocked:', registrationCheck.reason);
+        return res.status(403).json({
+          success: false,
+          message: registrationCheck.reason,
+          registrationClosed: true
+        });
+      }
+
+      console.log('✅ Registration is open');
+      console.log(`   Current Students: ${registrationCheck.currentStudents}/${registrationCheck.maxStudents}`);
+      console.log(`   Remaining Slots: ${registrationCheck.remainingSlots}`);
+    }
 
     // Step 4: Create new user object
     console.log('\n👤 Creating new user...');

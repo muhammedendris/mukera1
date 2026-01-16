@@ -80,7 +80,8 @@
       "mcp__playwright__browser_select_option",
       "WebFetch(domain:frontend-one-sigma-18.vercel.app)",
       "Bash(npm start --prefix frontend)",
-      "mcp__playwright__browser_handle_dialog"
+      "mcp__playwright__browser_handle_dialog",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

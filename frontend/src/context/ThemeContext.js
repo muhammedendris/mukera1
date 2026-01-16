@@ -5,67 +5,84 @@ const ThemeContext = createContext();
 
 // Theme Provider Component
 export const ThemeProvider = ({ children }) => {
-  // Get initial theme from localStorage or default to 'light'
-  const [theme, setTheme] = useState(() => {
+  // Theme can be 'light', 'dark', or 'auto'
+  const [themeMode, setThemeMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'light';
+    return savedTheme || 'auto'; // Default to auto
   });
 
-  // Toggle between light and dark themes
+  // Get system preference
+  const getSystemTheme = () => {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Actual theme being applied (resolves 'auto' to system preference)
+  const [appliedTheme, setAppliedTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'auto' || !savedTheme) {
+      return getSystemTheme();
+    }
+    return savedTheme;
+  });
+
+  // Toggle between light, dark, and auto
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-      return newTheme;
+    setThemeMode((prev) => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'auto';
+      return 'light';
     });
   };
 
-  // Set specific theme
-  const setLightTheme = () => setTheme('light');
-  const setDarkTheme = () => setTheme('dark');
+  // Set specific theme modes
+  const setLightTheme = () => setThemeMode('light');
+  const setDarkTheme = () => setThemeMode('dark');
+  const setAutoTheme = () => setThemeMode('auto');
 
-  // Apply theme to document root and save to localStorage
+  // Apply theme to document root
   useEffect(() => {
-    // Add or remove 'dark' class to <html> element
-    if (theme === 'dark') {
+    const effectiveTheme = themeMode === 'auto' ? getSystemTheme() : themeMode;
+    setAppliedTheme(effectiveTheme);
+
+    if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
 
-    // Save to localStorage
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    localStorage.setItem('theme', themeMode);
+  }, [themeMode]);
 
-  // Detect system preference on first load
+  // Listen for system theme changes when in auto mode
   useEffect(() => {
-    // Only run if no saved preference
-    if (!localStorage.getItem('theme')) {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        setTheme('dark');
-      }
-    }
-
-    // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      // Only auto-switch if user hasn't manually set a preference
-      if (!localStorage.getItem('theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
+
+    const handleChange = () => {
+      if (themeMode === 'auto') {
+        const newTheme = getSystemTheme();
+        setAppliedTheme(newTheme);
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
       }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [themeMode]);
 
   const value = {
-    theme,
+    theme: appliedTheme,        // The actual theme being displayed
+    themeMode,                  // The mode: 'light', 'dark', or 'auto'
     toggleTheme,
     setLightTheme,
     setDarkTheme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light',
+    setAutoTheme,
+    isDark: appliedTheme === 'dark',
+    isLight: appliedTheme === 'light',
+    isAuto: themeMode === 'auto',
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

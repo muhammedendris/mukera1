@@ -148,4 +148,16 @@ export const reportsAPI = {
   addFeedback: (id, feedback) => api.patch(`/reports/${id}/feedback`, { feedback })
 };
 
+// Admin API
+export const adminAPI = {
+  getReports: (startDate, endDate) => api.get(`/admin/reports?startDate=${startDate}&endDate=${endDate}`),
+  updateSettings: (settingsData) => api.put('/admin/settings', settingsData),
+  getRegistrationStats: () => api.get('/admin/settings/stats')
+};
+
+// Settings API (Public)
+export const settingsAPI = {
+  getSettings: () => api.get('/settings')
+};
+
 export default api;
